@@ -1,0 +1,1216 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Crypto Liquidity Flow</title>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=Syne+Mono&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #04080f;
+    --btc: #f7931a;
+    --alt: #00e5ff;
+    --gold: #ffd700;
+    --green: #00ff87;
+    --red: #ff3d5a;
+    --text: #e8f4f8;
+    --muted: #4a6278;
+    --surface: #0a1420;
+    --border: #0e2030;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'Syne', sans-serif;
+    min-height: 100vh;
+    overflow-x: hidden;
+    cursor: default;
+  }
+
+  /* starfield bg */
+  #stars {
+    position: fixed;
+    inset: 0;
+    pointer-events: none;
+    z-index: 0;
+  }
+
+  .container {
+    position: relative;
+    z-index: 1;
+    max-width: 960px;
+    margin: 0 auto;
+    padding: 40px 24px 80px;
+  }
+
+  /* HEADER */
+  .header {
+    text-align: center;
+    margin-bottom: 48px;
+  }
+
+  .header-label {
+    font-family: 'Syne Mono', monospace;
+    font-size: 11px;
+    color: var(--btc);
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    margin-bottom: 12px;
+    opacity: 0;
+    animation: fadeUp 0.6s ease 0.2s forwards;
+  }
+
+  h1 {
+    font-size: clamp(32px, 6vw, 60px);
+    font-weight: 800;
+    line-height: 1;
+    letter-spacing: -0.02em;
+    opacity: 0;
+    animation: fadeUp 0.6s ease 0.4s forwards;
+  }
+
+  h1 span { color: var(--btc); }
+
+  .header-sub {
+    margin-top: 14px;
+    font-size: 14px;
+    color: var(--muted);
+    font-weight: 400;
+    opacity: 0;
+    animation: fadeUp 0.6s ease 0.6s forwards;
+  }
+
+  @keyframes fadeUp {
+    from { opacity: 0; transform: translateY(12px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  /* PHASE STEPS */
+  .steps {
+    display: flex;
+    justify-content: center;
+    gap: 0;
+    margin-bottom: 36px;
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+
+  .step-btn {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    color: var(--muted);
+    font-family: 'Syne Mono', monospace;
+    font-size: 11px;
+    padding: 8px 16px;
+    cursor: pointer;
+    letter-spacing: 0.08em;
+    transition: all 0.25s;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .step-btn:hover { border-color: var(--btc); color: var(--text); }
+
+  .step-btn.active {
+    background: var(--btc);
+    border-color: var(--btc);
+    color: #000;
+    font-weight: 700;
+  }
+
+  .step-btn .dot {
+    width: 6px; height: 6px;
+    border-radius: 50%;
+    background: currentColor;
+  }
+
+  /* MAIN STAGE */
+  .stage {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 2px;
+    padding: 32px;
+    min-height: 420px;
+    position: relative;
+    overflow: hidden;
+    margin-bottom: 24px;
+  }
+
+  .stage::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: radial-gradient(ellipse at 50% 0%, rgba(247,147,26,0.04) 0%, transparent 60%);
+    pointer-events: none;
+  }
+
+  /* Scene containers */
+  .scene { display: none; }
+  .scene.active { display: block; animation: sceneIn 0.5s ease; }
+
+  @keyframes sceneIn {
+    from { opacity: 0; }
+    to { opacity: 1; }
+  }
+
+  /* ===== SCENE 1: THE HALVING ===== */
+  .halving-wrap {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 24px;
+    padding: 20px 0;
+  }
+
+  .scene-title {
+    font-family: 'Syne Mono', monospace;
+    font-size: 11px;
+    color: var(--btc);
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    text-align: center;
+  }
+
+  .mine-row {
+    display: flex;
+    align-items: center;
+    gap: 20px;
+    flex-wrap: wrap;
+    justify-content: center;
+  }
+
+  .mine-block {
+    text-align: center;
+  }
+
+  .mine-label {
+    font-size: 12px;
+    color: var(--muted);
+    margin-bottom: 8px;
+    font-family: 'Syne Mono', monospace;
+  }
+
+  .btc-coins {
+    display: flex;
+    gap: 6px;
+    flex-wrap: wrap;
+    max-width: 200px;
+    justify-content: center;
+  }
+
+  .coin {
+    width: 28px; height: 28px;
+    border-radius: 50%;
+    background: radial-gradient(circle at 35% 35%, #ffc94d, var(--btc), #b56800);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 9px;
+    font-weight: 800;
+    color: #000;
+    box-shadow: 0 2px 8px rgba(247,147,26,0.4);
+    animation: coinPop 0.4s ease both;
+  }
+
+  .coin.ghost {
+    background: transparent;
+    border: 1px dashed #1e3040;
+    box-shadow: none;
+    color: #1e3040;
+  }
+
+  @keyframes coinPop {
+    from { transform: scale(0) rotate(-20deg); opacity: 0; }
+    to { transform: scale(1) rotate(0deg); opacity: 1; }
+  }
+
+  .arrow-halving {
+    font-size: 28px;
+    color: var(--btc);
+    animation: pulse 1.5s ease infinite;
+  }
+
+  @keyframes pulse {
+    0%, 100% { opacity: 0.5; transform: scaleX(1); }
+    50% { opacity: 1; transform: scaleX(1.1); }
+  }
+
+  .supply-chart {
+    width: 100%;
+    max-width: 480px;
+  }
+
+  .supply-bar-wrap {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 8px;
+  }
+
+  .supply-bar-label {
+    font-family: 'Syne Mono', monospace;
+    font-size: 11px;
+    color: var(--muted);
+    width: 80px;
+    text-align: right;
+    flex-shrink: 0;
+  }
+
+  .supply-bar-track {
+    flex: 1;
+    height: 20px;
+    background: #0a1a28;
+    border: 1px solid var(--border);
+    position: relative;
+  }
+
+  .supply-bar-fill {
+    height: 100%;
+    background: linear-gradient(90deg, var(--btc), #ffc94d);
+    display: flex; align-items: center; justify-content: flex-end;
+    padding-right: 8px;
+    font-family: 'Syne Mono', monospace;
+    font-size: 10px;
+    color: #000;
+    font-weight: 700;
+    transition: width 1s ease;
+  }
+
+  .demand-arrow {
+    text-align: center;
+    margin-top: 16px;
+    font-size: 13px;
+    color: var(--green);
+    font-family: 'Syne Mono', monospace;
+    animation: blink 1s ease infinite;
+  }
+
+  @keyframes blink {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.3; }
+  }
+
+  /* ===== SCENE 2: BTC DOMINANCE ===== */
+  .pie-scene {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 48px;
+    flex-wrap: wrap;
+    padding: 20px 0;
+  }
+
+  .pie-wrap {
+    position: relative;
+    width: 200px; height: 200px;
+  }
+
+  .pie-label-center {
+    position: absolute;
+    top: 50%; left: 50%;
+    transform: translate(-50%, -50%);
+    text-align: center;
+  }
+
+  .pie-pct {
+    font-size: 28px;
+    font-weight: 800;
+    color: var(--btc);
+    line-height: 1;
+  }
+
+  .pie-sub {
+    font-family: 'Syne Mono', monospace;
+    font-size: 10px;
+    color: var(--muted);
+    margin-top: 4px;
+  }
+
+  .pie-legend {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+  }
+
+  .legend-item {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+
+  .legend-dot {
+    width: 12px; height: 12px;
+    border-radius: 2px;
+    flex-shrink: 0;
+  }
+
+  .legend-text { font-size: 14px; font-weight: 600; }
+  .legend-sub { font-size: 12px; color: var(--muted); margin-top: 2px; }
+
+  .dom-bars {
+    width: 100%;
+    max-width: 500px;
+  }
+
+  .dom-bar-row {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 10px;
+  }
+
+  .dom-bar-name {
+    font-family: 'Syne Mono', monospace;
+    font-size: 11px;
+    width: 50px;
+    flex-shrink: 0;
+  }
+
+  .dom-bar-track {
+    flex: 1;
+    height: 24px;
+    background: #0a1a28;
+    border: 1px solid var(--border);
+    overflow: hidden;
+  }
+
+  .dom-bar-fill {
+    height: 100%;
+    display: flex; align-items: center;
+    padding-left: 10px;
+    font-family: 'Syne Mono', monospace;
+    font-size: 11px;
+    font-weight: 700;
+    transition: width 1.2s cubic-bezier(0.34, 1.56, 0.64, 1);
+  }
+
+  /* ===== SCENE 3: ROTATION ===== */
+  .rotation-scene {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 28px;
+    padding: 10px 0;
+  }
+
+  .flow-diagram {
+    display: flex;
+    align-items: center;
+    gap: 0;
+    width: 100%;
+    max-width: 700px;
+    position: relative;
+  }
+
+  .flow-node {
+    flex: 1;
+    background: #0a1a28;
+    border: 1px solid var(--border);
+    padding: 20px 16px;
+    text-align: center;
+    position: relative;
+    transition: all 0.4s ease;
+  }
+
+  .flow-node.btc-node { border-color: rgba(247,147,26,0.4); }
+  .flow-node.alt-node { border-color: rgba(0,229,255,0.3); }
+  .flow-node.gold-node { border-color: rgba(255,215,0,0.3); }
+
+  .flow-node.active-glow {
+    box-shadow: 0 0 20px rgba(247,147,26,0.25);
+  }
+
+  .flow-node-icon { font-size: 28px; margin-bottom: 8px; }
+  .flow-node-name { font-size: 13px; font-weight: 700; margin-bottom: 4px; }
+  .flow-node-val {
+    font-family: 'Syne Mono', monospace;
+    font-size: 18px;
+    font-weight: 700;
+    transition: all 0.5s;
+  }
+
+  .flow-node-sub {
+    font-size: 11px;
+    color: var(--muted);
+    margin-top: 4px;
+  }
+
+  .flow-arrow {
+    width: 60px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 4px;
+    position: relative;
+    z-index: 2;
+  }
+
+  .arrow-line {
+    width: 100%;
+    height: 2px;
+    background: var(--border);
+    position: relative;
+    overflow: hidden;
+  }
+
+  .arrow-particle {
+    position: absolute;
+    top: -2px;
+    width: 8px; height: 6px;
+    border-radius: 50%;
+    animation: flowRight 1.5s linear infinite;
+    opacity: 0;
+  }
+
+  .arrow-particle.active { opacity: 1; }
+
+  @keyframes flowRight {
+    from { left: -10px; }
+    to { left: 110%; }
+  }
+
+  @keyframes flowLeft {
+    from { right: -10px; }
+    to { right: 110%; }
+  }
+
+  .arrow-tip {
+    font-size: 10px;
+    color: var(--muted);
+    text-align: center;
+    font-family: 'Syne Mono', monospace;
+  }
+
+  .liquidity-meter {
+    width: 100%;
+    max-width: 600px;
+  }
+
+  .liq-row {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 10px;
+  }
+
+  .liq-label {
+    font-family: 'Syne Mono', monospace;
+    font-size: 11px;
+    width: 100px;
+    flex-shrink: 0;
+  }
+
+  .liq-track {
+    flex: 1;
+    height: 18px;
+    background: #0a1a28;
+    border: 1px solid var(--border);
+    overflow: hidden;
+  }
+
+  .liq-fill {
+    height: 100%;
+    transition: width 1s ease;
+    display: flex; align-items: center;
+    padding: 0 8px;
+    font-family: 'Syne Mono', monospace;
+    font-size: 10px;
+    font-weight: 700;
+    color: #000;
+  }
+
+  /* ===== SCENE 4: ALTSEASON ===== */
+  .altseason-scene {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 24px;
+    padding: 10px 0;
+  }
+
+  .price-chart-wrap {
+    width: 100%;
+    max-width: 680px;
+  }
+
+  .chart-label {
+    font-family: 'Syne Mono', monospace;
+    font-size: 10px;
+    color: var(--muted);
+    margin-bottom: 8px;
+    letter-spacing: 0.1em;
+  }
+
+  .price-bars {
+    display: flex;
+    align-items: flex-end;
+    gap: 4px;
+    height: 120px;
+    padding: 0 4px;
+    background: #0a1a28;
+    border: 1px solid var(--border);
+    position: relative;
+  }
+
+  .price-bar {
+    flex: 1;
+    min-width: 12px;
+    border-radius: 1px 1px 0 0;
+    transition: height 0.6s cubic-bezier(0.34, 1.56, 0.64, 1);
+    position: relative;
+  }
+
+  .price-bar.btc-bar { background: linear-gradient(180deg, #ffc94d, var(--btc)); }
+  .price-bar.alt-bar { background: linear-gradient(180deg, #80f4ff, var(--alt)); }
+
+  .ticker-row {
+    display: flex;
+    gap: 12px;
+    flex-wrap: wrap;
+    justify-content: center;
+  }
+
+  .ticker {
+    background: #0a1a28;
+    border: 1px solid var(--border);
+    padding: 10px 16px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    transition: all 0.4s;
+  }
+
+  .ticker.pumping {
+    border-color: var(--alt);
+    background: rgba(0,229,255,0.05);
+    animation: tickerPulse 1s ease infinite;
+  }
+
+  @keyframes tickerPulse {
+    0%, 100% { box-shadow: 0 0 0 rgba(0,229,255,0); }
+    50% { box-shadow: 0 0 16px rgba(0,229,255,0.2); }
+  }
+
+  .ticker-name { font-size: 13px; font-weight: 700; }
+  .ticker-val {
+    font-family: 'Syne Mono', monospace;
+    font-size: 14px;
+    font-weight: 700;
+    transition: all 0.5s;
+  }
+  .ticker-change {
+    font-family: 'Syne Mono', monospace;
+    font-size: 11px;
+    padding: 2px 6px;
+    transition: all 0.5s;
+  }
+
+  .green { color: var(--green); }
+  .orange { color: var(--btc); }
+  .cyan { color: var(--alt); }
+  .gold-c { color: var(--gold); }
+
+  .bg-green { background: rgba(0,255,135,0.12); }
+  .bg-orange { background: rgba(247,147,26,0.15); }
+
+  /* ===== SCENE 5: TOTAL MARKET CAP ===== */
+  .totalmc-scene {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 24px;
+    padding: 10px 0;
+  }
+
+  .cap-visual {
+    display: flex;
+    align-items: flex-end;
+    justify-content: center;
+    gap: 20px;
+    flex-wrap: wrap;
+  }
+
+  .cap-block {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .cap-bar-wrap {
+    width: 80px;
+    height: 200px;
+    background: #0a1a28;
+    border: 1px solid var(--border);
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-end;
+    overflow: hidden;
+    position: relative;
+  }
+
+  .cap-fill-btc, .cap-fill-alt {
+    width: 100%;
+    transition: height 1.2s cubic-bezier(0.34, 1.56, 0.64, 1);
+  }
+
+  .cap-fill-btc { background: linear-gradient(180deg, #ffc94d88, var(--btc)); }
+  .cap-fill-alt { background: linear-gradient(180deg, #80f4ff66, var(--alt)); }
+
+  .cap-block-label {
+    font-family: 'Syne Mono', monospace;
+    font-size: 10px;
+    color: var(--muted);
+    text-align: center;
+  }
+
+  .cap-block-val {
+    font-size: 14px;
+    font-weight: 700;
+    text-align: center;
+  }
+
+  .insight-box {
+    background: rgba(0,229,255,0.05);
+    border: 1px solid rgba(0,229,255,0.2);
+    border-left: 3px solid var(--alt);
+    padding: 16px 20px;
+    max-width: 600px;
+    width: 100%;
+    font-size: 13px;
+    line-height: 1.7;
+    color: #b0d8e8;
+  }
+
+  .insight-box strong { color: var(--alt); }
+
+  /* EXPLAINER */
+  .explainer {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    padding: 20px 24px;
+    font-size: 14px;
+    line-height: 1.75;
+    color: #9ab8cc;
+    min-height: 80px;
+    transition: all 0.3s;
+  }
+
+  .explainer strong { color: var(--text); }
+  .explainer .highlight { color: var(--btc); font-weight: 600; }
+  .explainer .highlight-alt { color: var(--alt); font-weight: 600; }
+  .explainer .highlight-gold { color: var(--gold); font-weight: 600; }
+
+  /* PROGRESS */
+  .progress-bar {
+    display: flex;
+    gap: 4px;
+    margin-bottom: 20px;
+  }
+
+  .progress-seg {
+    flex: 1;
+    height: 3px;
+    background: var(--border);
+    transition: background 0.4s;
+  }
+
+  .progress-seg.done { background: var(--btc); }
+  .progress-seg.current { background: var(--btc); animation: shimmer 1s ease infinite; }
+
+  @keyframes shimmer {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.5; }
+  }
+
+  /* NAV */
+  .nav-btns {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-top: 20px;
+  }
+
+  .nav-btn {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    color: var(--text);
+    font-family: 'Syne', sans-serif;
+    font-size: 13px;
+    font-weight: 600;
+    padding: 10px 24px;
+    cursor: pointer;
+    transition: all 0.2s;
+    letter-spacing: 0.05em;
+  }
+
+  .nav-btn:hover:not(:disabled) { border-color: var(--btc); color: var(--btc); }
+  .nav-btn:disabled { opacity: 0.3; cursor: not-allowed; }
+
+  .nav-btn.primary {
+    background: var(--btc);
+    border-color: var(--btc);
+    color: #000;
+    font-weight: 700;
+  }
+
+  .nav-btn.primary:hover { background: #ffc94d; border-color: #ffc94d; }
+
+  .phase-indicator {
+    font-family: 'Syne Mono', monospace;
+    font-size: 11px;
+    color: var(--muted);
+  }
+</style>
+</head>
+<body>
+
+<canvas id="stars"></canvas>
+
+<div class="container">
+  <div class="header">
+    <div class="header-label">◆ Interactive Explainer</div>
+    <h1>How <span>Crypto Liquidity</span><br>Actually Flows</h1>
+    <p class="header-sub">Step through the full cycle — from halving to altseason — and see where the money goes.</p>
+  </div>
+
+  <!-- Progress -->
+  <div class="progress-bar" id="progressBar"></div>
+
+  <!-- Step buttons -->
+  <div class="steps" id="stepBtns"></div>
+
+  <!-- Stage -->
+  <div class="stage">
+
+    <!-- SCENE 1: HALVING -->
+    <div class="scene active" id="scene-0">
+      <div class="halving-wrap">
+        <div class="scene-title">◆ Phase 01 — The Halving Event</div>
+        <div class="mine-row">
+          <div class="mine-block">
+            <div class="mine-label">BEFORE HALVING</div>
+            <div class="btc-coins" id="coins-before"></div>
+            <div style="font-family:'Syne Mono',monospace;font-size:11px;color:var(--btc);margin-top:8px;text-align:center;">900 BTC / day</div>
+          </div>
+          <div class="arrow-halving">⟶</div>
+          <div class="mine-block">
+            <div class="mine-label">AFTER HALVING</div>
+            <div class="btc-coins" id="coins-after"></div>
+            <div style="font-family:'Syne Mono',monospace;font-size:11px;color:var(--btc);margin-top:8px;text-align:center;">450 BTC / day</div>
+          </div>
+        </div>
+        <div class="supply-chart">
+          <div class="supply-bar-wrap">
+            <div class="supply-bar-label">SUPPLY</div>
+            <div class="supply-bar-track">
+              <div class="supply-bar-fill" id="supplyBar" style="width:80%">↓ SHRINKING</div>
+            </div>
+          </div>
+          <div class="supply-bar-wrap">
+            <div class="supply-bar-label">DEMAND</div>
+            <div class="supply-bar-track">
+              <div class="supply-bar-fill" id="demandBar" style="width:40%;background:linear-gradient(90deg,#00ff87,#00c96a)">RISING ↑</div>
+            </div>
+          </div>
+        </div>
+        <div class="demand-arrow">↑ LESS SUPPLY + SAME/MORE DEMAND = HIGHER PRICE ↑</div>
+      </div>
+    </div>
+
+    <!-- SCENE 2: BTC DOMINANCE -->
+    <div class="scene" id="scene-1">
+      <div style="text-align:center;margin-bottom:20px;">
+        <div class="scene-title">◆ Phase 02 — BTC Dominance Rises</div>
+        <div style="font-size:12px;color:var(--muted);margin-top:6px;">Fresh money enters crypto through Bitcoin first</div>
+      </div>
+      <div class="dom-bars">
+        <div class="dom-bar-row">
+          <div class="dom-bar-name" style="color:var(--btc)">BTC</div>
+          <div class="dom-bar-track">
+            <div class="dom-bar-fill" id="domBtc" style="width:0%;background:linear-gradient(90deg,var(--btc),#ffc94d);color:#000">58%</div>
+          </div>
+        </div>
+        <div class="dom-bar-row">
+          <div class="dom-bar-name" style="color:var(--alt)">ALTS</div>
+          <div class="dom-bar-track">
+            <div class="dom-bar-fill" id="domAlts" style="width:0%;background:linear-gradient(90deg,#00a8bb,var(--alt));color:#000">32%</div>
+          </div>
+        </div>
+        <div class="dom-bar-row">
+          <div class="dom-bar-name" style="color:#aaa">STABLE</div>
+          <div class="dom-bar-track">
+            <div class="dom-bar-fill" id="domStable" style="width:0%;background:linear-gradient(90deg,#3a5568,#7a9ab0);color:#000">10%</div>
+          </div>
+        </div>
+      </div>
+      <div style="margin-top:20px;text-align:center;">
+        <div style="font-family:'Syne Mono',monospace;font-size:12px;color:var(--muted);margin-bottom:8px;">WHY BTC FIRST?</div>
+        <div style="display:flex;gap:12px;justify-content:center;flex-wrap:wrap;">
+          <div style="background:#0a1a28;border:1px solid var(--border);padding:10px 14px;font-size:12px;color:#9ab8cc;max-width:180px;text-align:center;line-height:1.5;">Most trusted<br><span style="color:var(--btc);font-weight:700;">5000+ institutions</span><br>hold BTC</div>
+          <div style="background:#0a1a28;border:1px solid var(--border);padding:10px 14px;font-size:12px;color:#9ab8cc;max-width:180px;text-align:center;line-height:1.5;">Most liquid<br><span style="color:var(--btc);font-weight:700;">Easiest on/off</span><br>ramp to crypto</div>
+          <div style="background:#0a1a28;border:1px solid var(--border);padding:10px 14px;font-size:12px;color:#9ab8cc;max-width:180px;text-align:center;line-height:1.5;">Halving narrative<br><span style="color:var(--btc);font-weight:700;">Media covers</span><br>BTC first</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- SCENE 3: ROTATION -->
+    <div class="scene" id="scene-2">
+      <div style="text-align:center;margin-bottom:20px;">
+        <div class="scene-title">◆ Phase 03 — Profit Taking & Rotation</div>
+        <div style="font-size:12px;color:var(--muted);margin-top:6px;">BTC holders seek higher returns → capital rotates outward</div>
+      </div>
+      <div class="flow-diagram">
+        <div class="flow-node btc-node active-glow" id="flowBtc">
+          <div class="flow-node-icon">₿</div>
+          <div class="flow-node-name" style="color:var(--btc)">BITCOIN</div>
+          <div class="flow-node-val orange" id="flowBtcVal">+180%</div>
+          <div class="flow-node-sub">Profits realized</div>
+        </div>
+        <div class="flow-arrow">
+          <div class="arrow-line">
+            <div class="arrow-particle active" id="p1" style="background:var(--btc)"></div>
+            <div class="arrow-particle active" id="p2" style="background:var(--btc);animation-delay:0.5s"></div>
+            <div class="arrow-particle active" id="p3" style="background:var(--btc);animation-delay:1s"></div>
+          </div>
+          <div class="arrow-tip" style="color:var(--btc)">→ rotates</div>
+        </div>
+        <div class="flow-node alt-node" id="flowAlt">
+          <div class="flow-node-icon">◈</div>
+          <div class="flow-node-name" style="color:var(--alt)">ALTCOINS</div>
+          <div class="flow-node-val cyan" id="flowAltVal">+0%</div>
+          <div class="flow-node-sub">Absorbing capital</div>
+        </div>
+      </div>
+      <div class="liquidity-meter">
+        <div class="liq-row">
+          <div class="liq-label" style="color:var(--btc)">BTC share</div>
+          <div class="liq-track">
+            <div class="liq-fill" id="rotBtc" style="width:58%;background:linear-gradient(90deg,var(--btc),#ffc94d)">58%</div>
+          </div>
+        </div>
+        <div class="liq-row">
+          <div class="liq-label" style="color:var(--alt)">ALT share</div>
+          <div class="liq-track">
+            <div class="liq-fill" id="rotAlt" style="width:32%;background:linear-gradient(90deg,#00a8bb,var(--alt))">32%</div>
+          </div>
+        </div>
+      </div>
+      <div style="text-align:center;margin-top:4px;">
+        <button onclick="animateRotation()" style="background:var(--surface);border:1px solid var(--btc);color:var(--btc);font-family:'Syne Mono',monospace;font-size:11px;padding:8px 20px;cursor:pointer;letter-spacing:0.1em;">▶ SIMULATE ROTATION</button>
+      </div>
+    </div>
+
+    <!-- SCENE 4: ALTSEASON -->
+    <div class="scene" id="scene-3">
+      <div style="text-align:center;margin-bottom:20px;">
+        <div class="scene-title">◆ Phase 04 — Altseason Ignites</div>
+        <div style="font-size:12px;color:var(--muted);margin-top:6px;">BTC dominance falls while total market cap GROWS — this is the key</div>
+      </div>
+      <div class="ticker-row" id="tickerRow">
+        <div class="ticker" id="t-btc">
+          <div class="flow-node-icon" style="font-size:20px">₿</div>
+          <div>
+            <div class="ticker-name" style="color:var(--btc)">BTC</div>
+            <div class="ticker-val orange" id="tv-btc">$95,000</div>
+          </div>
+          <div class="ticker-change bg-orange green" id="tc-btc">+2%</div>
+        </div>
+        <div class="ticker" id="t-eth">
+          <div class="flow-node-icon" style="font-size:20px">Ξ</div>
+          <div>
+            <div class="ticker-name" style="color:var(--alt)">ETH</div>
+            <div class="ticker-val cyan" id="tv-eth">$3,200</div>
+          </div>
+          <div class="ticker-change bg-green green" id="tc-eth">+8%</div>
+        </div>
+        <div class="ticker" id="t-sol">
+          <div class="flow-node-icon" style="font-size:20px">◎</div>
+          <div>
+            <div class="ticker-name" style="color:#9c88ff">SOL</div>
+            <div class="ticker-val" style="color:#9c88ff" id="tv-sol">$180</div>
+          </div>
+          <div class="ticker-change bg-green green" id="tc-sol">+15%</div>
+        </div>
+        <div class="ticker" id="t-micro">
+          <div class="flow-node-icon" style="font-size:20px">◆</div>
+          <div>
+            <div class="ticker-name" style="color:var(--green)">MICRO</div>
+            <div class="ticker-val green" id="tv-micro">$0.04</div>
+          </div>
+          <div class="ticker-change bg-green green" id="tc-micro">+40%</div>
+        </div>
+      </div>
+      <div style="background:#0a1a28;border:1px solid var(--border);padding:16px;max-width:600px;width:100%;margin-top:4px;">
+        <div style="font-family:'Syne Mono',monospace;font-size:10px;color:var(--muted);margin-bottom:12px;letter-spacing:0.1em;">ALTCOIN SEASON INDEX</div>
+        <div style="display:flex;align-items:center;gap:16px;">
+          <div style="flex:1;height:24px;background:#060e18;border:1px solid var(--border);position:relative;overflow:hidden;">
+            <div id="altIndexBar" style="height:100%;width:0%;background:linear-gradient(90deg,var(--alt),var(--green));transition:width 1.5s cubic-bezier(0.34,1.56,0.64,1);display:flex;align-items:center;justify-content:flex-end;padding-right:8px;font-family:'Syne Mono',monospace;font-size:11px;font-weight:700;color:#000;">82</div>
+          </div>
+          <div style="font-family:'Syne Mono',monospace;font-size:22px;font-weight:800;color:var(--alt)" id="altIndexNum">0</div>
+          <div style="font-size:12px;color:var(--green)">ALTSEASON</div>
+        </div>
+        <div style="display:flex;justify-content:space-between;font-family:'Syne Mono',monospace;font-size:9px;color:var(--muted);margin-top:4px;"><span>BTC SEASON</span><span>NEUTRAL</span><span>ALT SEASON</span></div>
+      </div>
+      <div style="text-align:center;">
+        <button onclick="animateAltseason()" style="background:var(--surface);border:1px solid var(--alt);color:var(--alt);font-family:'Syne Mono',monospace;font-size:11px;padding:8px 20px;cursor:pointer;letter-spacing:0.1em;">▶ SIMULATE ALTSEASON</button>
+      </div>
+    </div>
+
+    <!-- SCENE 5: TOTAL MARKET CAP -->
+    <div class="scene" id="scene-4">
+      <div style="text-align:center;margin-bottom:20px;">
+        <div class="scene-title">◆ Phase 05 — The Full Picture</div>
+        <div style="font-size:12px;color:var(--muted);margin-top:6px;">Altseason is NOT zero sum — the entire pie grows</div>
+      </div>
+      <div class="cap-visual">
+        <div class="cap-block">
+          <div class="cap-bar-wrap">
+            <div class="cap-fill-alt" id="capAlt1" style="height:20%"></div>
+            <div class="cap-fill-btc" id="capBtc1" style="height:35%"></div>
+          </div>
+          <div class="cap-block-label">BEAR<br>MARKET</div>
+          <div class="cap-block-val" style="color:var(--muted)">$800B</div>
+        </div>
+        <div style="font-size:24px;color:var(--muted);padding-bottom:80px;">→</div>
+        <div class="cap-block">
+          <div class="cap-bar-wrap">
+            <div class="cap-fill-alt" id="capAlt2" style="height:25%"></div>
+            <div class="cap-fill-btc" id="capBtc2" style="height:55%"></div>
+          </div>
+          <div class="cap-block-label">BTC<br>LEADS</div>
+          <div class="cap-block-val" style="color:var(--btc)">$2.5T</div>
+        </div>
+        <div style="font-size:24px;color:var(--muted);padding-bottom:80px;">→</div>
+        <div class="cap-block">
+          <div class="cap-bar-wrap">
+            <div class="cap-fill-alt" id="capAlt3" style="height:55%"></div>
+            <div class="cap-fill-btc" id="capBtc3" style="height:35%"></div>
+          </div>
+          <div class="cap-block-label">ALTSEASON<br>EXPLODES</div>
+          <div class="cap-block-val" style="color:var(--alt)">$5T+</div>
+        </div>
+      </div>
+      <div class="insight-box">
+        <strong>Your insight, visualized:</strong> In altseason, BTC dominance <em>falls</em> even though BTC price may still be rising. The alt slice grows faster than the BTC slice — but <strong>the entire pie doubled or tripled in size</strong>. That's net new liquidity flooding in from outside crypto. The money isn't leaving BTC — more money just entered the whole system.
+      </div>
+    </div>
+
+  </div>
+
+  <!-- Explainer text -->
+  <div class="explainer" id="explainer"></div>
+
+  <!-- Nav -->
+  <div class="nav-btns">
+    <button class="nav-btn" id="prevBtn" onclick="navigate(-1)" disabled>← PREV</button>
+    <div class="phase-indicator" id="phaseIndicator">PHASE 1 OF 5</div>
+    <button class="nav-btn primary" id="nextBtn" onclick="navigate(1)">NEXT →</button>
+  </div>
+</div>
+
+<script>
+// Stars
+const canvas = document.getElementById('stars');
+const ctx = canvas.getContext('2d');
+canvas.width = window.innerWidth;
+canvas.height = window.innerHeight;
+const stars = Array.from({length: 120}, () => ({
+  x: Math.random() * canvas.width,
+  y: Math.random() * canvas.height,
+  r: Math.random() * 1.2,
+  o: Math.random() * 0.5 + 0.1,
+  speed: Math.random() * 0.3 + 0.05
+}));
+function drawStars() {
+  ctx.clearRect(0, 0, canvas.width, canvas.height);
+  stars.forEach(s => {
+    ctx.beginPath();
+    ctx.arc(s.x, s.y, s.r, 0, Math.PI * 2);
+    ctx.fillStyle = `rgba(180,220,255,${s.o})`;
+    ctx.fill();
+    s.o += (Math.random() - 0.5) * 0.02;
+    s.o = Math.max(0.05, Math.min(0.6, s.o));
+  });
+  requestAnimationFrame(drawStars);
+}
+drawStars();
+
+const phases = [
+  {
+    label: '01 HALVING',
+    explainer: `The <span class="highlight">Bitcoin halving</span> cuts new BTC supply in half every ~4 years. Before: 900 BTC mined per day. After: 450. If demand stays the same and supply shrinks, price must rise to find equilibrium. But the bigger effect is <strong>psychological</strong> — the halving acts as a starting gun. It tells the market "the cycle is beginning." That narrative alone pulls in fresh capital from retail, institutions, and media.`
+  },
+  {
+    label: '02 BTC DOM',
+    explainer: `Fresh money entering crypto almost always goes to <span class="highlight">Bitcoin first</span>. It's the most trusted, most liquid, most regulated, and most covered asset in the space. Institutions can justify a BTC allocation to their boards far easier than an ETH or SOL one. This is why Bitcoin dominance rises early in the cycle — not because alts are dying, but because BTC is absorbing the majority of new capital flowing in.`
+  },
+  {
+    label: '03 ROTATION',
+    explainer: `After BTC has already pumped significantly, holders who are sitting on large gains start asking: <em>"where can I get higher returns now?"</em> BTC going from $60k to $120k feels less exciting than a small-cap going 10x. So profits <strong>rotate</strong> from BTC into altcoins. This is what causes BTC dominance to <span class="highlight">fall</span>. Not because BTC is crashing — but because alts start growing faster.`
+  },
+  {
+    label: '04 ALTSEASON',
+    explainer: `When rotation accelerates, the <span class="highlight-alt">Altcoin Season Index</span> climbs above 75. This means 75%+ of the top 100 altcoins are outperforming BTC over the last 90 days. Large caps like ETH and SOL move first, then mid-caps, then finally micro-caps can 10x-100x. The key insight: <strong>BTC doesn't need to fall</strong> for altseason to happen. It just needs to move slower than alts.`
+  },
+  {
+    label: '05 THE MATH',
+    explainer: `Here's the insight you figured out yourself: if BTC is still at $100k but its dominance dropped from 60% to 40%, that means the total crypto market cap grew massively. <span class="highlight-alt">Altseason is not zero sum</span>. It signals that <strong>net new external liquidity entered the entire ecosystem</strong>. The pie didn't just get reshuffled — it got bigger. That's why total market cap rising alongside falling BTC dominance is the true altseason confirmation signal.`
+  }
+];
+
+let current = 0;
+
+// Build progress and step buttons
+const progressBar = document.getElementById('progressBar');
+const stepBtnsEl = document.getElementById('stepBtns');
+phases.forEach((p, i) => {
+  const seg = document.createElement('div');
+  seg.className = 'progress-seg' + (i === 0 ? ' current' : '');
+  seg.id = 'prog-' + i;
+  progressBar.appendChild(seg);
+
+  const btn = document.createElement('button');
+  btn.className = 'step-btn' + (i === 0 ? ' active' : '');
+  btn.id = 'step-' + i;
+  btn.innerHTML = `<div class="dot"></div>${p.label}`;
+  btn.onclick = () => goTo(i);
+  stepBtnsEl.appendChild(btn);
+});
+
+function goTo(index) {
+  document.getElementById('scene-' + current).classList.remove('active');
+  document.getElementById('step-' + current).classList.remove('active');
+  document.getElementById('prog-' + current).className = 'progress-seg done';
+
+  current = index;
+
+  document.getElementById('scene-' + current).classList.add('active');
+  document.getElementById('step-' + current).classList.add('active');
+  document.getElementById('explainer').innerHTML = phases[current].explainer;
+  document.getElementById('phaseIndicator').textContent = `PHASE ${current + 1} OF ${phases.length}`;
+  document.getElementById('prevBtn').disabled = current === 0;
+  document.getElementById('nextBtn').disabled = current === phases.length - 1;
+  document.getElementById('nextBtn').textContent = current === phases.length - 1 ? 'DONE ✓' : 'NEXT →';
+
+  // update progress segs
+  phases.forEach((_, i) => {
+    const seg = document.getElementById('prog-' + i);
+    if (i < current) seg.className = 'progress-seg done';
+    else if (i === current) seg.className = 'progress-seg current';
+    else seg.className = 'progress-seg';
+  });
+
+  onSceneEnter(current);
+}
+
+function navigate(dir) { goTo(current + dir); }
+
+function onSceneEnter(idx) {
+  if (idx === 1) {
+    // Animate dominance bars
+    setTimeout(() => {
+      document.getElementById('domBtc').style.width = '58%';
+      document.getElementById('domAlts').style.width = '32%';
+      document.getElementById('domStable').style.width = '10%';
+    }, 100);
+  }
+  if (idx === 4) {
+    // Animate cap blocks
+    setTimeout(() => {
+      document.getElementById('capBtc1').style.height = '35%';
+      document.getElementById('capAlt1').style.height = '20%';
+      document.getElementById('capBtc2').style.height = '55%';
+      document.getElementById('capAlt2').style.height = '25%';
+      document.getElementById('capBtc3').style.height = '35%';
+      document.getElementById('capAlt3').style.height = '55%';
+    }, 200);
+  }
+}
+
+// Build halving coins
+function buildCoins() {
+  const before = document.getElementById('coins-before');
+  const after = document.getElementById('coins-after');
+  for (let i = 0; i < 9; i++) {
+    const c = document.createElement('div');
+    c.className = 'coin';
+    c.style.animationDelay = (i * 0.05) + 's';
+    c.textContent = '₿';
+    before.appendChild(c);
+  }
+  for (let i = 0; i < 9; i++) {
+    const c = document.createElement('div');
+    c.style.animationDelay = (i * 0.05) + 's';
+    if (i < 5) { c.className = 'coin'; c.textContent = '₿'; }
+    else { c.className = 'coin ghost'; c.textContent = ''; }
+    after.appendChild(c);
+  }
+}
+buildCoins();
+
+// Animate supply/demand
+setTimeout(() => {
+  const d = document.getElementById('demandBar');
+  if (d) d.style.width = '75%';
+}, 800);
+
+let rotationDone = false;
+function animateRotation() {
+  rotationDone = true;
+  const steps = [
+    { btc: '52%', alt: '38%', btcVal: '+180%', altVal: '+25%' },
+    { btc: '47%', alt: '43%', btcVal: '+175%', altVal: '+60%' },
+    { btc: '43%', alt: '47%', btcVal: '+170%', altVal: '+120%' },
+  ];
+  steps.forEach((s, i) => {
+    setTimeout(() => {
+      document.getElementById('rotBtc').style.width = s.btc;
+      document.getElementById('rotBtc').textContent = s.btc;
+      document.getElementById('rotAlt').style.width = s.alt;
+      document.getElementById('rotAlt').textContent = s.alt;
+      document.getElementById('flowBtcVal').textContent = s.btcVal;
+      document.getElementById('flowAltVal').textContent = s.altVal;
+    }, i * 600);
+  });
+}
+
+let altseasonDone = false;
+function animateAltseason() {
+  altseasonDone = true;
+  document.getElementById('altIndexBar').style.width = '82%';
+
+  let n = 0;
+  const target = 82;
+  const interval = setInterval(() => {
+    n = Math.min(n + 2, target);
+    document.getElementById('altIndexNum').textContent = n;
+    if (n >= target) clearInterval(interval);
+  }, 30);
+
+  // Pump tickers
+  setTimeout(() => {
+    document.getElementById('t-eth').classList.add('pumping');
+    document.getElementById('tc-eth').textContent = '+45%';
+    document.getElementById('tv-eth').textContent = '$4,640';
+  }, 400);
+  setTimeout(() => {
+    document.getElementById('t-sol').classList.add('pumping');
+    document.getElementById('tc-sol').textContent = '+80%';
+    document.getElementById('tv-sol').textContent = '$324';
+  }, 900);
+  setTimeout(() => {
+    document.getElementById('t-micro').classList.add('pumping');
+    document.getElementById('tc-micro').textContent = '+420%';
+    document.getElementById('tv-micro').textContent = '$0.21';
+  }, 1400);
+}
+
+// Init
+document.getElementById('explainer').innerHTML = phases[0].explainer;
+document.getElementById('phaseIndicator').textContent = `PHASE 1 OF ${phases.length}`;
+</script>
+</body>
+</html>
