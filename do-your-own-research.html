@@ -1,0 +1,1066 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>100x Crypto DYOR Roadmap</title>
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Space+Grotesk:wght@300;400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #080b0f;
+    --surface: #0f1318;
+    --card: #141920;
+    --border: #1e2730;
+    --accent: #00ff94;
+    --accent-dim: rgba(0,255,148,0.12);
+    --warn: #ffb800;
+    --warn-dim: rgba(255,184,0,0.12);
+    --danger: #ff4757;
+    --danger-dim: rgba(255,71,87,0.1);
+    --blue: #4fc3f7;
+    --blue-dim: rgba(79,195,247,0.1);
+    --purple: #b39ddb;
+    --text: #e8edf2;
+    --muted: #5a6a7a;
+    --muted2: #8a9aaa;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'Space Grotesk', sans-serif;
+    min-height: 100vh;
+    padding-bottom: 80px;
+  }
+
+  /* HEADER */
+  header {
+    background: linear-gradient(180deg, #0d1520 0%, var(--bg) 100%);
+    border-bottom: 1px solid var(--border);
+    padding: 40px 48px 36px;
+    position: relative;
+    overflow: hidden;
+  }
+
+  header::before {
+    content: '';
+    position: absolute;
+    top: -60px; right: -60px;
+    width: 300px; height: 300px;
+    background: radial-gradient(circle, rgba(0,255,148,0.06) 0%, transparent 70%);
+    pointer-events: none;
+  }
+
+  .badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    background: var(--accent-dim);
+    border: 1px solid rgba(0,255,148,0.3);
+    color: var(--accent);
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10px;
+    letter-spacing: 0.12em;
+    padding: 4px 12px;
+    margin-bottom: 20px;
+    text-transform: uppercase;
+  }
+
+  .badge::before { content: '◆'; font-size: 7px; }
+
+  h1 {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: clamp(56px, 8vw, 100px);
+    line-height: 0.95;
+    letter-spacing: 0.01em;
+    color: var(--text);
+  }
+
+  h1 em {
+    color: var(--accent);
+    font-style: normal;
+  }
+
+  .header-sub {
+    margin-top: 16px;
+    font-size: 14px;
+    color: var(--muted2);
+    font-weight: 300;
+    max-width: 520px;
+    line-height: 1.7;
+  }
+
+  /* DISCLAIMER */
+  .disclaimer {
+    margin: 0 48px;
+    margin-top: 24px;
+    background: var(--danger-dim);
+    border: 1px solid rgba(255,71,87,0.25);
+    border-left: 3px solid var(--danger);
+    padding: 12px 18px;
+    font-size: 12px;
+    color: #ff8a95;
+    font-family: 'JetBrains Mono', monospace;
+    letter-spacing: 0.03em;
+  }
+
+  /* PHASE NAV */
+  .phase-nav {
+    display: flex;
+    gap: 0;
+    padding: 32px 48px 0;
+    overflow-x: auto;
+    border-bottom: 1px solid var(--border);
+  }
+
+  .phase-tab {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 14px 24px;
+    cursor: pointer;
+    font-size: 12px;
+    font-weight: 500;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: var(--muted);
+    border-bottom: 2px solid transparent;
+    white-space: nowrap;
+    transition: all 0.2s;
+    font-family: 'JetBrains Mono', monospace;
+  }
+
+  .phase-tab:hover { color: var(--text); }
+
+  .phase-tab.active {
+    color: var(--accent);
+    border-bottom-color: var(--accent);
+  }
+
+  .phase-tab .num {
+    width: 20px; height: 20px;
+    border-radius: 50%;
+    background: var(--border);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 10px;
+  }
+
+  .phase-tab.active .num {
+    background: var(--accent);
+    color: #000;
+  }
+
+  /* CONTENT */
+  .content {
+    padding: 40px 48px;
+  }
+
+  .phase-content { display: none; }
+  .phase-content.active { display: block; animation: fadeIn 0.3s ease; }
+
+  @keyframes fadeIn {
+    from { opacity: 0; transform: translateY(6px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  .phase-header {
+    display: flex;
+    align-items: flex-start;
+    gap: 20px;
+    margin-bottom: 32px;
+  }
+
+  .phase-icon {
+    width: 56px; height: 56px;
+    background: var(--accent-dim);
+    border: 1px solid rgba(0,255,148,0.2);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 24px;
+    flex-shrink: 0;
+  }
+
+  .phase-icon.warn { background: var(--warn-dim); border-color: rgba(255,184,0,0.25); }
+  .phase-icon.blue { background: var(--blue-dim); border-color: rgba(79,195,247,0.2); }
+  .phase-icon.danger { background: var(--danger-dim); border-color: rgba(255,71,87,0.2); }
+
+  .phase-title {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 40px;
+    line-height: 1;
+    letter-spacing: 0.02em;
+    color: var(--text);
+  }
+
+  .phase-desc {
+    font-size: 14px;
+    color: var(--muted2);
+    margin-top: 6px;
+    line-height: 1.6;
+    font-weight: 300;
+  }
+
+  /* Checklist items */
+  .checklist {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(340px, 1fr));
+    gap: 12px;
+  }
+
+  .check-item {
+    background: var(--card);
+    border: 1px solid var(--border);
+    padding: 16px 20px;
+    cursor: pointer;
+    transition: all 0.2s;
+    display: flex;
+    align-items: flex-start;
+    gap: 14px;
+    position: relative;
+  }
+
+  .check-item:hover {
+    border-color: var(--accent);
+    background: #181f28;
+  }
+
+  .check-item.checked {
+    border-color: var(--accent);
+    background: var(--accent-dim);
+  }
+
+  .check-item.red-flag {
+    border-color: var(--danger);
+    background: var(--danger-dim);
+  }
+
+  .checkbox {
+    width: 20px; height: 20px;
+    border: 2px solid var(--border);
+    flex-shrink: 0;
+    margin-top: 1px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 12px;
+    transition: all 0.2s;
+    color: transparent;
+  }
+
+  .check-item.checked .checkbox {
+    background: var(--accent);
+    border-color: var(--accent);
+    color: #000;
+  }
+
+  .check-item.red-flag .checkbox {
+    background: var(--danger);
+    border-color: var(--danger);
+    color: #fff;
+  }
+
+  .check-body { flex: 1; }
+
+  .check-title {
+    font-size: 14px;
+    font-weight: 500;
+    color: var(--text);
+    margin-bottom: 4px;
+  }
+
+  .check-detail {
+    font-size: 12px;
+    color: var(--muted2);
+    line-height: 1.55;
+    font-weight: 300;
+  }
+
+  .check-tool {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10px;
+    color: var(--accent);
+    margin-top: 8px;
+    display: flex;
+    align-items: center;
+    gap: 4px;
+  }
+
+  .check-tool::before { content: '→'; }
+
+  /* Section labels */
+  .section-label {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10px;
+    color: var(--accent);
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    margin: 28px 0 14px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+
+  .section-label::after {
+    content: '';
+    flex: 1;
+    height: 1px;
+    background: var(--border);
+  }
+
+  /* Score tracker */
+  .score-bar {
+    position: fixed;
+    bottom: 0; left: 0; right: 0;
+    background: var(--surface);
+    border-top: 1px solid var(--border);
+    padding: 14px 48px;
+    display: flex;
+    align-items: center;
+    gap: 24px;
+    z-index: 50;
+  }
+
+  .score-label {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    color: var(--muted2);
+    letter-spacing: 0.08em;
+    white-space: nowrap;
+  }
+
+  .score-track {
+    flex: 1;
+    height: 6px;
+    background: var(--border);
+    position: relative;
+  }
+
+  .score-fill {
+    position: absolute;
+    left: 0; top: 0; bottom: 0;
+    background: var(--accent);
+    transition: width 0.4s ease;
+    width: 0%;
+  }
+
+  .score-count {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--accent);
+    white-space: nowrap;
+  }
+
+  .reset-btn {
+    background: none;
+    border: 1px solid var(--border);
+    color: var(--muted);
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10px;
+    padding: 6px 14px;
+    cursor: pointer;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    transition: all 0.2s;
+  }
+
+  .reset-btn:hover { border-color: var(--danger); color: var(--danger); }
+
+  /* Narrative grid */
+  .narrative-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+    gap: 10px;
+    margin-top: 14px;
+  }
+
+  .narrative-card {
+    background: var(--card);
+    border: 1px solid var(--border);
+    padding: 14px 16px;
+    cursor: pointer;
+    transition: all 0.2s;
+  }
+
+  .narrative-card:hover, .narrative-card.selected {
+    border-color: var(--blue);
+    background: var(--blue-dim);
+  }
+
+  .narrative-icon { font-size: 22px; margin-bottom: 8px; }
+
+  .narrative-name {
+    font-size: 13px;
+    font-weight: 600;
+    margin-bottom: 4px;
+  }
+
+  .narrative-heat {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10px;
+    color: var(--warn);
+  }
+
+  /* Tools grid */
+  .tools-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+    gap: 10px;
+  }
+
+  .tool-card {
+    background: var(--card);
+    border: 1px solid var(--border);
+    padding: 16px 18px;
+    display: flex;
+    gap: 14px;
+    align-items: flex-start;
+  }
+
+  .tool-emoji { font-size: 20px; flex-shrink: 0; }
+
+  .tool-name {
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--text);
+    margin-bottom: 3px;
+  }
+
+  .tool-use {
+    font-size: 12px;
+    color: var(--muted2);
+    font-weight: 300;
+  }
+
+  .tool-tag {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 9px;
+    padding: 2px 7px;
+    margin-top: 6px;
+    display: inline-block;
+  }
+
+  .tag-free { background: rgba(0,255,148,0.1); color: var(--accent); }
+  .tag-paid { background: rgba(179,157,219,0.1); color: var(--purple); }
+  .tag-free-paid { background: rgba(255,184,0,0.1); color: var(--warn); }
+
+  @media (max-width: 768px) {
+    header, .content, .score-bar { padding-left: 20px; padding-right: 20px; }
+    .disclaimer { margin-left: 20px; margin-right: 20px; }
+    .phase-nav { padding-left: 20px; }
+    h1 { font-size: 52px; }
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="badge">DYOR Framework · 2025/2026 Bull Cycle</div>
+  <h1>FIND THE<br><em>100X GEM</em></h1>
+  <p class="header-sub">A step-by-step research roadmap for identifying high-potential crypto projects early — before the whales take all the upside.</p>
+</header>
+
+<div class="disclaimer">⚠ NOT FINANCIAL ADVICE — This is a research framework only. Crypto is extremely high risk. Never invest what you cannot afford to lose entirely.</div>
+
+<!-- PHASE NAV -->
+<div class="phase-nav">
+  <div class="phase-tab active" onclick="showPhase(0)">
+    <div class="num">1</div> Macro Scan
+  </div>
+  <div class="phase-tab" onclick="showPhase(1)">
+    <div class="num">2</div> Project Fundamentals
+  </div>
+  <div class="phase-tab" onclick="showPhase(2)">
+    <div class="num">3</div> Tokenomics
+  </div>
+  <div class="phase-tab" onclick="showPhase(3)">
+    <div class="num">4</div> On-Chain Analysis
+  </div>
+  <div class="phase-tab" onclick="showPhase(4)">
+    <div class="num">5</div> Red Flags
+  </div>
+  <div class="phase-tab" onclick="showPhase(5)">
+    <div class="num">6</div> Tools Arsenal
+  </div>
+</div>
+
+<div class="content">
+
+  <!-- PHASE 1: MACRO SCAN -->
+  <div class="phase-content active" id="phase-0">
+    <div class="phase-header">
+      <div class="phase-icon">🌍</div>
+      <div>
+        <div class="phase-title">Macro Scan</div>
+        <div class="phase-desc">Before researching any specific project, understand where capital is rotating in the current cycle. The right narrative at the right time multiplies any gem's potential significantly.</div>
+      </div>
+    </div>
+
+    <div class="section-label">Hot Narratives — 2025/2026 Cycle</div>
+    <div class="narrative-grid">
+      <div class="narrative-card" onclick="this.classList.toggle('selected')">
+        <div class="narrative-icon">🤖</div>
+        <div class="narrative-name">AI + Crypto</div>
+        <div class="narrative-heat">🔥🔥🔥 Ultra Hot</div>
+      </div>
+      <div class="narrative-card" onclick="this.classList.toggle('selected')">
+        <div class="narrative-icon">🏗</div>
+        <div class="narrative-name">DePIN</div>
+        <div class="narrative-heat">🔥🔥🔥 Hot</div>
+      </div>
+      <div class="narrative-card" onclick="this.classList.toggle('selected')">
+        <div class="narrative-icon">🏦</div>
+        <div class="narrative-name">RWA Tokenization</div>
+        <div class="narrative-heat">🔥🔥🔥 Hot</div>
+      </div>
+      <div class="narrative-card" onclick="this.classList.toggle('selected')">
+        <div class="narrative-icon">⚡</div>
+        <div class="narrative-name">Layer 2s / Modular</div>
+        <div class="narrative-heat">🔥🔥 Warm</div>
+      </div>
+      <div class="narrative-card" onclick="this.classList.toggle('selected')">
+        <div class="narrative-icon">🎮</div>
+        <div class="narrative-name">GameFi 2.0</div>
+        <div class="narrative-heat">🔥🔥 Warm</div>
+      </div>
+      <div class="narrative-card" onclick="this.classList.toggle('selected')">
+        <div class="narrative-icon">🔄</div>
+        <div class="narrative-name">Restaking / Yield</div>
+        <div class="narrative-heat">🔥🔥 Warm</div>
+      </div>
+      <div class="narrative-card" onclick="this.classList.toggle('selected')">
+        <div class="narrative-icon">🐸</div>
+        <div class="narrative-name">Memecoins</div>
+        <div class="narrative-heat">🔥 Speculative</div>
+      </div>
+      <div class="narrative-card" onclick="this.classList.toggle('selected')">
+        <div class="narrative-icon">🔒</div>
+        <div class="narrative-name">Privacy / ZK</div>
+        <div class="narrative-heat">🔥 Emerging</div>
+      </div>
+    </div>
+
+    <div class="section-label">Macro Checklist</div>
+    <div class="checklist">
+      <div class="check-item" onclick="toggleCheck(this)">
+        <div class="checkbox">✓</div>
+        <div class="check-body">
+          <div class="check-title">Identify the dominant cycle narrative</div>
+          <div class="check-detail">What is the market talking about most right now? Capital rotates between narratives. Being in the right sector early is half the battle.</div>
+          <div class="check-tool">Check CoinGecko Categories, Kaito AI, X trending</div>
+        </div>
+      </div>
+      <div class="check-item" onclick="toggleCheck(this)">
+        <div class="checkbox">✓</div>
+        <div class="check-body">
+          <div class="check-title">Check Bitcoin dominance cycle position</div>
+          <div class="check-detail">When BTC dominance peaks and starts dropping, altcoin season begins. That's when small caps can 10x-100x rapidly.</div>
+          <div class="check-tool">TradingView — BTC.D chart</div>
+        </div>
+      </div>
+      <div class="check-item" onclick="toggleCheck(this)">
+        <div class="checkbox">✓</div>
+        <div class="check-body">
+          <div class="check-title">Target microcap range under $50M market cap</div>
+          <div class="check-detail">A project at $5M market cap needs way less capital to reach $500M than a project already at $500M. Under $10M is early stage but higher risk.</div>
+          <div class="check-tool">CoinGecko filter by market cap</div>
+        </div>
+      </div>
+      <div class="check-item" onclick="toggleCheck(this)">
+        <div class="checkbox">✓</div>
+        <div class="check-body">
+          <div class="check-title">Scan for tokens with rising mindshare</div>
+          <div class="check-detail">Mindshare (social mentions + sentiment) typically precedes price rallies. You want to find a project before the crowd does.</div>
+          <div class="check-tool">Kaito AI, Santiment, CryptoPanic</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- PHASE 2: FUNDAMENTALS -->
+  <div class="phase-content" id="phase-1">
+    <div class="phase-header">
+      <div class="phase-icon">🔬</div>
+      <div>
+        <div class="phase-title">Project Fundamentals</div>
+        <div class="phase-desc">A project is only as strong as its team, product, and community. This phase separates real builders from hype merchants.</div>
+      </div>
+    </div>
+
+    <div class="section-label">Team & Credibility</div>
+    <div class="checklist">
+      <div class="check-item" onclick="toggleCheck(this)">
+        <div class="checkbox">✓</div>
+        <div class="check-body">
+          <div class="check-title">Team is doxxed / publicly identifiable</div>
+          <div class="check-detail">Anonymous teams aren't automatically scams, but a doxxed team has more skin in the game and accountability. Check LinkedIn, past projects, GitHub handles.</div>
+        </div>
+      </div>
+      <div class="check-item" onclick="toggleCheck(this)">
+        <div class="checkbox">✓</div>
+        <div class="check-body">
+          <div class="check-title">Founder has relevant track record</div>
+          <div class="check-detail">Have they shipped a successful product before? Been in the space long enough? Look for prior exits, contributions to known protocols, or real-world domain expertise.</div>
+        </div>
+      </div>
+      <div class="check-item" onclick="toggleCheck(this)">
+        <div class="checkbox">✓</div>
+        <div class="check-body">
+          <div class="check-title">Reputable backers or VCs invested</div>
+          <div class="check-detail">Names like Multicoin, a16z, Binance Labs, or Coinbase Ventures signal that smart money has done the due diligence already. Not a guarantee, but a strong signal.</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="section-label">Product & Problem</div>
+    <div class="checklist">
+      <div class="check-item" onclick="toggleCheck(this)">
+        <div class="checkbox">✓</div>
+        <div class="check-body">
+          <div class="check-title">Solves a real, specific problem</div>
+          <div class="check-detail">Ask: what would break if this project disappeared? If the answer is "nothing," the token exists only to be traded — not a great long-term sign.</div>
+        </div>
+      </div>
+      <div class="check-item" onclick="toggleCheck(this)">
+        <div class="checkbox">✓</div>
+        <div class="check-body">
+          <div class="check-title">Product is live or has a credible testnet</div>
+          <div class="check-detail">Projects with working code are far less likely to vanish than whitepaper-only ideas. Check if there's a live app, testnet activity, or deployed contracts.</div>
+          <div class="check-tool">GitHub activity, project website, DeFiLlama TVL</div>
+        </div>
+      </div>
+      <div class="check-item" onclick="toggleCheck(this)">
+        <div class="checkbox">✓</div>
+        <div class="check-body">
+          <div class="check-title">Blockchain is actually needed</div>
+          <div class="check-detail">Does this genuinely need to be on-chain, or could it work as a regular web app? Projects that need decentralization have stronger staying power.</div>
+        </div>
+      </div>
+      <div class="check-item" onclick="toggleCheck(this)">
+        <div class="checkbox">✓</div>
+        <div class="check-body">
+          <div class="check-title">Active GitHub with recent commits</div>
+          <div class="check-detail">Real builders ship code consistently. A dead or sparse GitHub is a major warning. Look for commits in the last 30 days and multiple contributors.</div>
+          <div class="check-tool">GitHub repo, CryptoMiso developer activity tracker</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="section-label">Community & Ecosystem</div>
+    <div class="checklist">
+      <div class="check-item" onclick="toggleCheck(this)">
+        <div class="checkbox">✓</div>
+        <div class="check-body">
+          <div class="check-title">Community feels organic, not astroturfed</div>
+          <div class="check-detail">Join the Discord or Telegram. Real communities ask hard questions, debate, and build. Fake ones just post "wen moon" and nothing else.</div>
+        </div>
+      </div>
+      <div class="check-item" onclick="toggleCheck(this)">
+        <div class="checkbox">✓</div>
+        <div class="check-body">
+          <div class="check-title">Real ecosystem integrations or partnerships</div>
+          <div class="check-detail">Are other protocols building on top of this? Do known companies or DAOs use it? Integrations are proof of external value recognition.</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- PHASE 3: TOKENOMICS -->
+  <div class="phase-content" id="phase-2">
+    <div class="phase-header">
+      <div class="phase-icon warn">💰</div>
+      <div>
+        <div class="phase-title">Tokenomics Deep Dive</div>
+        <div class="phase-desc">Even the best project can be a terrible investment if the token is structured to dump on retail. Understand supply dynamics before any entry.</div>
+      </div>
+    </div>
+
+    <div class="section-label">Supply Analysis</div>
+    <div class="checklist">
+      <div class="check-item" onclick="toggleCheck(this)">
+        <div class="checkbox">✓</div>
+        <div class="check-body">
+          <div class="check-title">Check fully diluted valuation vs. market cap</div>
+          <div class="check-detail">If circulating market cap is $50M but FDV is $2B, there's an enormous overhang of tokens yet to hit the market. A token at $0.10 with 90% supply locked could dump to $0.001 after unlock.</div>
+          <div class="check-tool">CoinGecko, CoinMarketCap — compare FDV to mktcap</div>
+        </div>
+      </div>
+      <div class="check-item" onclick="toggleCheck(this)">
+        <div class="checkbox">✓</div>
+        <div class="check-body">
+          <div class="check-title">Map all upcoming token unlock dates</div>
+          <div class="check-detail">Team, VC, and advisor unlocks create massive selling pressure. Know exactly when big unlocks happen so you're not holding when insiders exit.</div>
+          <div class="check-tool">TokenUnlocks.app, Vesting.xyz</div>
+        </div>
+      </div>
+      <div class="check-item" onclick="toggleCheck(this)">
+        <div class="checkbox">✓</div>
+        <div class="check-body">
+          <div class="check-title">Inflation rate is sustainable</div>
+          <div class="check-detail">High emission staking rewards can dilute your position rapidly. Check annual inflation rate and whether token demand will outpace new supply.</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="section-label">Token Distribution</div>
+    <div class="checklist">
+      <div class="check-item" onclick="toggleCheck(this)">
+        <div class="checkbox">✓</div>
+        <div class="check-body">
+          <div class="check-title">No single wallet holds more than 10-15% of supply</div>
+          <div class="check-detail">Whale concentration = easy price manipulation. If 5 wallets hold 80% of the supply, those wallets are the market.</div>
+          <div class="check-tool">Etherscan token holders, BubbleMaps</div>
+        </div>
+      </div>
+      <div class="check-item" onclick="toggleCheck(this)">
+        <div class="checkbox">✓</div>
+        <div class="check-body">
+          <div class="check-title">Team allocation is reasonable (under 20%)</div>
+          <div class="check-detail">Founders and team deserve equity, but if they hold 40%+ with short vesting, they have every incentive to dump and abandon the project.</div>
+        </div>
+      </div>
+      <div class="check-item" onclick="toggleCheck(this)">
+        <div class="checkbox">✓</div>
+        <div class="check-body">
+          <div class="check-title">Token has real utility — not just governance</div>
+          <div class="check-detail">Governance-only tokens rarely capture value. Look for fee sharing, staking rewards tied to actual revenue, or burn mechanisms that reduce supply over time.</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- PHASE 4: ON-CHAIN -->
+  <div class="phase-content" id="phase-3">
+    <div class="phase-header">
+      <div class="phase-icon blue">📡</div>
+      <div>
+        <div class="phase-title">On-Chain Analysis</div>
+        <div class="phase-desc">The blockchain doesn't lie. On-chain data tells you what wallets are actually doing — not what the marketing team says they're doing.</div>
+      </div>
+    </div>
+
+    <div class="section-label">Growth Signals</div>
+    <div class="checklist">
+      <div class="check-item" onclick="toggleCheck(this)">
+        <div class="checkbox">✓</div>
+        <div class="check-body">
+          <div class="check-title">Growing unique wallet count (week over week)</div>
+          <div class="check-detail">New unique wallets interacting with the protocol means real user adoption, not just speculation. Consistent weekly growth is a strong early signal.</div>
+          <div class="check-tool">Dune Analytics, Nansen</div>
+        </div>
+      </div>
+      <div class="check-item" onclick="toggleCheck(this)">
+        <div class="checkbox">✓</div>
+        <div class="check-body">
+          <div class="check-title">TVL (Total Value Locked) is growing</div>
+          <div class="check-detail">For DeFi projects, rising TVL = users trusting the protocol with real capital. Declining TVL despite price pumps is a red flag.</div>
+          <div class="check-tool">DeFiLlama</div>
+        </div>
+      </div>
+      <div class="check-item" onclick="toggleCheck(this)">
+        <div class="checkbox">✓</div>
+        <div class="check-body">
+          <div class="check-title">Transaction volume is organic, not wash-traded</div>
+          <div class="check-detail">High volume can be artificially inflated by bots trading with themselves. Look for consistent daily active users, not just transaction count spikes.</div>
+          <div class="check-tool">Dune Analytics custom queries, Bubblemaps</div>
+        </div>
+      </div>
+      <div class="check-item" onclick="toggleCheck(this)">
+        <div class="checkbox">✓</div>
+        <div class="check-body">
+          <div class="check-title">Smart money wallets are accumulating</div>
+          <div class="check-detail">When known profitable wallets (tracked by Nansen as "Smart Money") are buying a token, it's a very bullish on-chain signal. Watch for accumulation patterns.</div>
+          <div class="check-tool">Nansen Smart Money filter</div>
+        </div>
+      </div>
+      <div class="check-item" onclick="toggleCheck(this)">
+        <div class="checkbox">✓</div>
+        <div class="check-body">
+          <div class="check-title">RSI is not already overbought (below 70)</div>
+          <div class="check-detail">If the token already pumped 500% in the last week, you might be buying the top rather than the early opportunity. Check RSI on daily chart.</div>
+          <div class="check-tool">TradingView</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="section-label">Security Checks</div>
+    <div class="checklist">
+      <div class="check-item" onclick="toggleCheck(this)">
+        <div class="checkbox">✓</div>
+        <div class="check-body">
+          <div class="check-title">Smart contract is verified and audited</div>
+          <div class="check-detail">Verified on Etherscan/BscScan means you can read the actual code. An audit by a reputable firm (Trail of Bits, CertiK, OpenZeppelin) is crucial — not just any random audit.</div>
+          <div class="check-tool">Etherscan, BscScan, audit report links</div>
+        </div>
+      </div>
+      <div class="check-item" onclick="toggleCheck(this)">
+        <div class="checkbox">✓</div>
+        <div class="check-body">
+          <div class="check-title">Liquidity is locked and sufficient</div>
+          <div class="check-detail">If liquidity isn't locked, the team can pull all liquidity (rug pull) at any time. Also check that there's enough liquidity that a moderate sell won't crash price 50%.</div>
+          <div class="check-tool">Team Finance, Unicrypt — check lock duration</div>
+        </div>
+      </div>
+      <div class="check-item" onclick="toggleCheck(this)">
+        <div class="checkbox">✓</div>
+        <div class="check-body">
+          <div class="check-title">Test sell transaction before entering</div>
+          <div class="check-detail">Honeypots let you buy but not sell. Use DEX tools to simulate a sell before committing real money — this is non-negotiable for new tokens.</div>
+          <div class="check-tool">Honeypot.is, Token Sniffer</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- PHASE 5: RED FLAGS -->
+  <div class="phase-content" id="phase-4">
+    <div class="phase-header">
+      <div class="phase-icon danger">🚨</div>
+      <div>
+        <div class="phase-title">Red Flags — Exit Immediately</div>
+        <div class="phase-desc">These are deal-breakers. If you spot any of these, no amount of narrative or hype can save the investment. Walk away.</div>
+      </div>
+    </div>
+
+    <div class="checklist">
+      <div class="check-item red-flag">
+        <div class="checkbox" style="background:var(--danger);border-color:var(--danger);color:#fff;">✕</div>
+        <div class="check-body">
+          <div class="check-title">Anonymous team making "100x guaranteed" promises</div>
+          <div class="check-detail">Real builders let the work speak for itself. If someone is promising exact returns, they're either lying or setting up an exit scam. No legitimate project guarantees price performance.</div>
+        </div>
+      </div>
+      <div class="check-item red-flag">
+        <div class="checkbox" style="background:var(--danger);border-color:var(--danger);color:#fff;">✕</div>
+        <div class="check-body">
+          <div class="check-title">Contract not verified on block explorer</div>
+          <div class="check-detail">Unverified contracts are a blackbox — you can't see what the code actually does. The owner could have hidden admin functions that allow unlimited minting or ownership transfer.</div>
+        </div>
+      </div>
+      <div class="check-item red-flag">
+        <div class="checkbox" style="background:var(--danger);border-color:var(--danger);color:#fff;">✕</div>
+        <div class="check-body">
+          <div class="check-title">Honeypot detected — cannot sell</div>
+          <div class="check-detail">The most brutal scam: you can buy, price goes up, you try to sell — and the contract blocks it. Always simulate a sell on honeypot.is before buying any new token.</div>
+        </div>
+      </div>
+      <div class="check-item red-flag">
+        <div class="checkbox" style="background:var(--danger);border-color:var(--danger);color:#fff;">✕</div>
+        <div class="check-body">
+          <div class="check-title">Top 10 wallets hold 80%+ of supply</div>
+          <div class="check-detail">Extreme whale concentration means the price is fully controlled by a small group. One sell from the top holder can wipe out your position instantly.</div>
+        </div>
+      </div>
+      <div class="check-item red-flag">
+        <div class="checkbox" style="background:var(--danger);border-color:var(--danger);color:#fff;">✕</div>
+        <div class="check-body">
+          <div class="check-title">Price pumped with no product updates or news</div>
+          <div class="check-detail">Sudden price spikes with zero fundamental catalyst = coordinated pump before dump. Check if volume spike coincides with anything real, or if it's just social media noise.</div>
+        </div>
+      </div>
+      <div class="check-item red-flag">
+        <div class="checkbox" style="background:var(--danger);border-color:var(--danger);color:#fff;">✕</div>
+        <div class="check-body">
+          <div class="check-title">Influencers paid to shill with no disclosure</div>
+          <div class="check-detail">Coordinated influencer campaigns often dump within 48 hours of the initial pump. Multiple accounts posting the exact same phrases/memes = paid operation.</div>
+        </div>
+      </div>
+      <div class="check-item red-flag">
+        <div class="checkbox" style="background:var(--danger);border-color:var(--danger);color:#fff;">✕</div>
+        <div class="check-body">
+          <div class="check-title">No GitHub or dead/copied codebase</div>
+          <div class="check-detail">If there's no code to show, there's no product being built. Some projects fork another project's code and change the name — that's not development, that's laziness at best and scam at worst.</div>
+        </div>
+      </div>
+      <div class="check-item red-flag">
+        <div class="checkbox" style="background:var(--danger);border-color:var(--danger);color:#fff;">✕</div>
+        <div class="check-body">
+          <div class="check-title">Large insider unlock coming within 90 days</div>
+          <div class="check-detail">If team or VC tokens unlock soon, they have strong incentive to hype price before selling. Check TokenUnlocks.app and avoid entering right before major unlock events.</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- PHASE 6: TOOLS -->
+  <div class="phase-content" id="phase-5">
+    <div class="phase-header">
+      <div class="phase-icon blue">🛠</div>
+      <div>
+        <div class="phase-title">Tools Arsenal</div>
+        <div class="phase-desc">The right tools turn guesswork into data-driven conviction. These are the platforms serious crypto researchers use in 2025.</div>
+      </div>
+    </div>
+
+    <div class="section-label">Discovery & Sentiment</div>
+    <div class="tools-grid">
+      <div class="tool-card">
+        <div class="tool-emoji">📊</div>
+        <div>
+          <div class="tool-name">CoinGecko / CoinMarketCap</div>
+          <div class="tool-use">Token prices, market cap, categories, trending</div>
+          <div class="tool-tag tag-free">FREE</div>
+        </div>
+      </div>
+      <div class="tool-card">
+        <div class="tool-emoji">🧠</div>
+        <div>
+          <div class="tool-name">Kaito AI</div>
+          <div class="tool-use">Mindshare tracking, social sentiment, upcoming launches</div>
+          <div class="tool-tag tag-free-paid">FREE / PAID</div>
+        </div>
+      </div>
+      <div class="tool-card">
+        <div class="tool-emoji">😇</div>
+        <div>
+          <div class="tool-name">Santiment</div>
+          <div class="tool-use">Social volume, dev activity, whale behavior</div>
+          <div class="tool-tag tag-free-paid">FREE / PAID</div>
+        </div>
+      </div>
+      <div class="tool-card">
+        <div class="tool-emoji">📰</div>
+        <div>
+          <div class="tool-name">CryptoPanic</div>
+          <div class="tool-use">Real-time news aggregator with sentiment tagging</div>
+          <div class="tool-tag tag-free">FREE</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="section-label">On-Chain Research</div>
+    <div class="tools-grid">
+      <div class="tool-card">
+        <div class="tool-emoji">🔍</div>
+        <div>
+          <div class="tool-name">Dune Analytics</div>
+          <div class="tool-use">Custom on-chain dashboards, wallet analysis, protocol stats</div>
+          <div class="tool-tag tag-free">FREE</div>
+        </div>
+      </div>
+      <div class="tool-card">
+        <div class="tool-emoji">🐳</div>
+        <div>
+          <div class="tool-name">Nansen</div>
+          <div class="tool-use">Smart money wallet tracking, token god mode, wallet labels</div>
+          <div class="tool-tag tag-paid">PAID</div>
+        </div>
+      </div>
+      <div class="tool-card">
+        <div class="tool-emoji">🔗</div>
+        <div>
+          <div class="tool-name">DeFiLlama</div>
+          <div class="tool-use">TVL across all chains and protocols, token flows</div>
+          <div class="tool-tag tag-free">FREE</div>
+        </div>
+      </div>
+      <div class="tool-card">
+        <div class="tool-emoji">🫧</div>
+        <div>
+          <div class="tool-name">BubbleMaps</div>
+          <div class="tool-use">Visual wallet clustering — spot connected insider wallets</div>
+          <div class="tool-tag tag-free">FREE</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="section-label">Safety & Security</div>
+    <div class="tools-grid">
+      <div class="tool-card">
+        <div class="tool-emoji">🍯</div>
+        <div>
+          <div class="tool-name">Honeypot.is</div>
+          <div class="tool-use">Simulate buy/sell to detect if token can be sold</div>
+          <div class="tool-tag tag-free">FREE</div>
+        </div>
+      </div>
+      <div class="tool-card">
+        <div class="tool-emoji">🐍</div>
+        <div>
+          <div class="tool-name">Token Sniffer</div>
+          <div class="tool-use">Automated rug pull and scam contract detection</div>
+          <div class="tool-tag tag-free">FREE</div>
+        </div>
+      </div>
+      <div class="tool-card">
+        <div class="tool-emoji">🔓</div>
+        <div>
+          <div class="tool-name">TokenUnlocks.app</div>
+          <div class="tool-use">Track all upcoming vesting and token unlock schedules</div>
+          <div class="tool-tag tag-free-paid">FREE / PAID</div>
+        </div>
+      </div>
+      <div class="tool-card">
+        <div class="tool-emoji">📈</div>
+        <div>
+          <div class="tool-name">TradingView</div>
+          <div class="tool-use">RSI, chart patterns, technical analysis on all crypto pairs</div>
+          <div class="tool-tag tag-free-paid">FREE / PAID</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="section-label">Pre-Launch Discovery</div>
+    <div class="tools-grid">
+      <div class="tool-card">
+        <div class="tool-emoji">🚀</div>
+        <div>
+          <div class="tool-name">Seedify / CoinList</div>
+          <div class="tool-use">Access IDOs and early token launches before exchange listing</div>
+          <div class="tool-tag tag-free">FREE (stake to access)</div>
+        </div>
+      </div>
+      <div class="tool-card">
+        <div class="tool-emoji">🌙</div>
+        <div>
+          <div class="tool-name">MoonGems</div>
+          <div class="tool-use">Curated early-stage project discovery and screening</div>
+          <div class="tool-tag tag-free">FREE</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<!-- SCORE BAR -->
+<div class="score-bar">
+  <div class="score-label">DYOR PROGRESS</div>
+  <div class="score-track">
+    <div class="score-fill" id="scoreFill"></div>
+  </div>
+  <div class="score-count" id="scoreCount">0 / 20 checks</div>
+  <button class="reset-btn" onclick="resetAll()">Reset</button>
+</div>
+
+<script>
+  const tabs = document.querySelectorAll('.phase-tab');
+  const phases = document.querySelectorAll('.phase-content');
+
+  function showPhase(index) {
+    tabs.forEach((t, i) => t.classList.toggle('active', i === index));
+    phases.forEach((p, i) => p.classList.toggle('active', i === index));
+  }
+
+  const TOTAL = 20;
+
+  function toggleCheck(el) {
+    if (el.classList.contains('red-flag')) return;
+    el.classList.toggle('checked');
+    updateScore();
+  }
+
+  function updateScore() {
+    const checked = document.querySelectorAll('.check-item.checked').length;
+    const pct = (checked / TOTAL) * 100;
+    document.getElementById('scoreFill').style.width = pct + '%';
+    document.getElementById('scoreCount').textContent = checked + ' / ' + TOTAL + ' checks';
+  }
+
+  function resetAll() {
+    document.querySelectorAll('.check-item.checked').forEach(el => el.classList.remove('checked'));
+    document.querySelectorAll('.narrative-card.selected').forEach(el => el.classList.remove('selected'));
+    updateScore();
+  }
+</script>
+</body>
+</html>
