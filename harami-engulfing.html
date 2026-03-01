@@ -1,0 +1,962 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Harami & Engulfing</title>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=Syne+Mono&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #060a0f;
+    --surface: #0b1318;
+    --card: #0f1a22;
+    --border: #112030;
+    --bull: #00d97e;
+    --bear: #ff3d5a;
+    --eng: #38bdf8;
+    --har: #f0a500;
+    --text: #ddeef8;
+    --muted: #3a5060;
+    --muted2: #7aaabb;
+  }
+
+  * { margin:0; padding:0; box-sizing:border-box; }
+
+  body {
+    background:var(--bg);
+    color:var(--text);
+    font-family:'Syne',sans-serif;
+    min-height:100vh;
+    overflow-x:hidden;
+  }
+
+  canvas#bg { position:fixed; inset:0; z-index:0; pointer-events:none; }
+
+  .wrap {
+    position:relative; z-index:1;
+    max-width:1000px;
+    margin:0 auto;
+    padding:40px 24px 100px;
+  }
+
+  /* HEADER */
+  .hdr { text-align:center; margin-bottom:40px; }
+  .hdr-tag {
+    font-family:'Syne Mono',monospace;
+    font-size:10px; color:var(--eng);
+    letter-spacing:.2em; text-transform:uppercase;
+    margin-bottom:12px;
+    opacity:0; animation:up .5s ease .1s forwards;
+  }
+  h1 {
+    font-size:clamp(34px,6vw,70px);
+    font-weight:800; line-height:.93; letter-spacing:-.025em;
+    opacity:0; animation:up .5s ease .25s forwards;
+  }
+  h1 .ce { color:var(--eng); }
+  h1 .ch { color:var(--har); }
+  .hdr-sub {
+    margin-top:14px; font-size:14px; color:var(--muted2); font-weight:400;
+    opacity:0; animation:up .5s ease .4s forwards;
+  }
+  @keyframes up { from{opacity:0;transform:translateY(10px)} to{opacity:1;transform:translateY(0)} }
+
+  /* TABS */
+  .tabs { display:flex; gap:6px; flex-wrap:wrap; justify-content:center; margin-bottom:22px; }
+  .tab {
+    background:var(--surface); border:1px solid var(--border);
+    color:var(--muted2); font-family:'Syne Mono',monospace;
+    font-size:11px; padding:9px 16px; cursor:pointer;
+    letter-spacing:.07em; transition:all .2s;
+    display:flex; align-items:center; gap:7px;
+  }
+  .tab .dot { width:7px; height:7px; border-radius:50%; background:currentColor; }
+  .tab:hover { border-color:var(--eng); color:var(--text); }
+  .tab.ae { background:var(--eng); border-color:var(--eng); color:#000; font-weight:700; }
+  .tab.ah { background:var(--har); border-color:var(--har); color:#000; font-weight:700; }
+  .tab.ac { background:#6366f1; border-color:#6366f1; color:#fff; font-weight:700; }
+
+  /* PROGRESS */
+  .prog { display:flex; gap:3px; margin-bottom:20px; }
+  .prog-s { flex:1; height:3px; background:var(--border); transition:background .3s; }
+  .prog-s.done { background:var(--muted); }
+  .prog-s.ne { background:var(--eng); animation:pb 1s ease infinite; }
+  .prog-s.nh { background:var(--har); animation:pb 1s ease infinite; }
+  .prog-s.nc { background:#6366f1; animation:pb 1s ease infinite; }
+  @keyframes pb { 0%,100%{opacity:1} 50%{opacity:.3} }
+
+  /* STAGE */
+  .stage {
+    background:var(--surface); border:1px solid var(--border);
+    min-height:480px; padding:32px;
+    position:relative; overflow:hidden; margin-bottom:20px;
+  }
+  .stage::after {
+    content:''; position:absolute; inset:0;
+    background:radial-gradient(ellipse at 50% -5%, rgba(56,189,248,.04) 0%, transparent 55%);
+    pointer-events:none;
+  }
+
+  .scene { display:none; }
+  .scene.active {
+    display:flex; flex-direction:column; align-items:center;
+    gap:26px; animation:scIn .4s ease;
+  }
+  @keyframes scIn { from{opacity:0;transform:translateY(8px)} to{opacity:1;transform:translateY(0)} }
+
+  .sc-title {
+    font-family:'Syne Mono',monospace; font-size:11px;
+    letter-spacing:.15em; text-transform:uppercase; text-align:center;
+  }
+
+  /* CARDS */
+  .cards {
+    display:grid; grid-template-columns:repeat(auto-fill,minmax(210px,1fr));
+    gap:10px; width:100%; max-width:740px;
+  }
+  .card {
+    background:var(--card); border:1px solid var(--border);
+    padding:14px 16px;
+  }
+  .cl {
+    font-family:'Syne Mono',monospace; font-size:10px;
+    letter-spacing:.1em; margin-bottom:6px;
+  }
+  .ct { font-size:13px; color:var(--muted2); line-height:1.65; font-weight:400; }
+  .ct strong { color:var(--text); }
+
+  /* SIGNALS */
+  .sigs { display:flex; gap:10px; flex-wrap:wrap; justify-content:center; }
+  .sig {
+    display:inline-flex; align-items:center; gap:6px;
+    padding:6px 14px; font-family:'Syne Mono',monospace;
+    font-size:11px; font-weight:700; letter-spacing:.07em;
+  }
+  .sig.bull { background:rgba(0,217,126,.1); border:1px solid rgba(0,217,126,.3); color:var(--bull); }
+  .sig.bear { background:rgba(255,61,90,.1); border:1px solid rgba(255,61,90,.3); color:var(--bear); }
+  .sig.neu { background:rgba(56,189,248,.1); border:1px solid rgba(56,189,248,.25); color:var(--eng); }
+  .sig.war { background:rgba(240,165,0,.1); border:1px solid rgba(240,165,0,.3); color:var(--har); }
+
+  /* CANDLE PAIR DISPLAY */
+  .pair-wrap {
+    display:flex; gap:48px; justify-content:center; flex-wrap:wrap; align-items:flex-end;
+  }
+
+  .pair-col { display:flex; flex-direction:column; align-items:center; gap:12px; }
+  .pair-label {
+    font-family:'Syne Mono',monospace; font-size:11px;
+    text-align:center; letter-spacing:.05em;
+  }
+
+  /* CHART DISPLAY */
+  .chart-outer {
+    background:#050c14; border:1px solid var(--border);
+    padding:16px 20px 8px; width:100%; max-width:700px;
+  }
+  .chart-label {
+    font-family:'Syne Mono',monospace; font-size:9px;
+    color:var(--muted); letter-spacing:.1em; margin-bottom:10px;
+  }
+  .candles-row {
+    display:flex; gap:5px; align-items:flex-end; height:160px;
+  }
+
+  /* COMPARE TABLE */
+  .ctable {
+    width:100%; max-width:740px;
+    border-collapse:collapse;
+  }
+  .ctable th, .ctable td {
+    padding:12px 16px; text-align:left;
+    border-bottom:1px solid var(--border);
+    font-size:13px;
+  }
+  .ctable th {
+    font-family:'Syne Mono',monospace; font-size:10px;
+    letter-spacing:.1em; color:var(--muted2); background:var(--card);
+  }
+  .ctable td { color:var(--muted2); }
+  .ctable td strong { color:var(--text); }
+  .ctable tr:hover td { background:rgba(255,255,255,.015); }
+
+  /* EXPLAINER */
+  .explainer {
+    background:var(--surface); border:1px solid var(--border);
+    border-left:3px solid var(--eng);
+    padding:18px 22px; font-size:14px; line-height:1.78;
+    color:var(--muted2); min-height:72px;
+  }
+  .explainer strong { color:var(--text); }
+  .explainer .he { color:var(--eng); font-weight:700; }
+  .explainer .hh { color:var(--har); font-weight:700; }
+  .explainer .hb { color:var(--bull); font-weight:600; }
+  .explainer .hr { color:var(--bear); font-weight:600; }
+  .explainer.hborder { border-left-color:var(--har); }
+  .explainer.cborder { border-left-color:#6366f1; }
+
+  /* NAV */
+  .nav-row { display:flex; justify-content:space-between; align-items:center; margin-top:18px; }
+  .nbtn {
+    background:var(--surface); border:1px solid var(--border);
+    color:var(--text); font-family:'Syne',sans-serif;
+    font-size:13px; font-weight:700; padding:10px 26px;
+    cursor:pointer; letter-spacing:.05em; transition:all .2s;
+  }
+  .nbtn:hover:not(:disabled) { border-color:var(--eng); color:var(--eng); }
+  .nbtn:disabled { opacity:.2; cursor:not-allowed; }
+  .nbtn.pe { background:var(--eng); border-color:var(--eng); color:#000; }
+  .nbtn.ph { background:var(--har); border-color:var(--har); color:#000; }
+  .nbtn.pc { background:#6366f1; border-color:#6366f1; color:#fff; }
+  .nav-ind { font-family:'Syne Mono',monospace; font-size:11px; color:var(--muted); }
+
+  /* SIZE annotation box */
+  .size-box {
+    background:var(--card); border:1px solid var(--border);
+    border-left:3px solid var(--eng);
+    padding:12px 16px; max-width:660px; width:100%;
+  }
+
+  @media(max-width:600px){
+    .stage{padding:18px 12px;}
+    .wrap{padding:24px 12px 80px;}
+  }
+</style>
+</head>
+<body>
+
+<canvas id="bg"></canvas>
+
+<div class="wrap">
+  <div class="hdr">
+    <div class="hdr-tag">◆ Candlestick Series — Two-Candle Patterns</div>
+    <h1><span class="ce">Engulfing</span><br>&amp; <span class="ch">Harami</span></h1>
+    <p class="hdr-sub">Two-candle patterns. One swallows the other. One is swallowed. Opposite logic — opposite signals.</p>
+  </div>
+
+  <div class="tabs" id="tabs"></div>
+  <div class="prog" id="prog"></div>
+
+  <div class="stage">
+
+    <!-- SCENE 0: THE CONCEPT -->
+    <div class="scene active" id="sc0">
+      <div class="sc-title" style="color:var(--eng)">◆ 00 — The Core Concept</div>
+
+      <div class="pair-wrap">
+
+        <!-- Engulfing visual -->
+        <div class="pair-col">
+          <div style="font-family:'Syne Mono',monospace;font-size:10px;color:var(--eng);letter-spacing:.1em;margin-bottom:4px;">ENGULFING</div>
+          <svg width="120" height="220" viewBox="0 0 120 220">
+            <!-- candle 1: small bear -->
+            <line x1="35" y1="30" x2="35" y2="40" stroke="var(--bear)" stroke-width="2"/>
+            <rect x="20" y="40" width="30" height="50" rx="2"
+              fill="rgba(255,61,90,.2)" stroke="var(--bear)" stroke-width="2" opacity="0">
+              <animate attributeName="opacity" from="0" to="1" dur=".4s" begin=".2s" fill="freeze"/>
+            </rect>
+            <line x1="35" y1="90" x2="35" y2="100" stroke="var(--bear)" stroke-width="2"/>
+            <text x="35" y="18" text-anchor="middle" fill="var(--bear)" font-family="Syne Mono,monospace" font-size="8" opacity="0">
+              CANDLE 1
+              <animate attributeName="opacity" from="0" to="1" dur=".3s" begin=".5s" fill="freeze"/>
+            </text>
+
+            <!-- candle 2: big bull — ENGULFS -->
+            <line x1="85" y1="22" x2="85" y2="32" stroke="var(--bull)" stroke-width="2"/>
+            <rect x="68" y="32" width="34" height="116" rx="2"
+              fill="rgba(0,217,126,.18)" stroke="var(--bull)" stroke-width="2.5" opacity="0">
+              <animate attributeName="opacity" from="0" to="1" dur=".6s" begin=".8s" fill="freeze"/>
+            </rect>
+            <line x1="85" y1="148" x2="85" y2="160" stroke="var(--bull)" stroke-width="2"/>
+            <text x="85" y="10" text-anchor="middle" fill="var(--bull)" font-family="Syne Mono,monospace" font-size="8" opacity="0">
+              CANDLE 2
+              <animate attributeName="opacity" from="0" to="1" dur=".3s" begin="1.2s" fill="freeze"/>
+            </text>
+
+            <!-- bracket showing engulf -->
+            <rect x="62" y="28" width="46" height="136" rx="2"
+              fill="none" stroke="var(--eng)" stroke-width="1" stroke-dasharray="4,3" opacity="0">
+              <animate attributeName="opacity" from="0" to="0.6" dur=".4s" begin="1.4s" fill="freeze"/>
+            </rect>
+            <text x="60" y="185" text-anchor="middle" fill="var(--eng)" font-family="Syne Mono,monospace" font-size="8" opacity="0">
+              C2 SWALLOWS C1
+              <animate attributeName="opacity" from="0" to="1" dur=".3s" begin="1.6s" fill="freeze"/>
+            </text>
+          </svg>
+          <div class="pair-label" style="color:var(--eng)">2nd CANDLE BIGGER</div>
+        </div>
+
+        <!-- vs -->
+        <div style="font-family:'Syne Mono',monospace;font-size:20px;color:var(--muted);padding-bottom:60px;">VS</div>
+
+        <!-- Harami visual -->
+        <div class="pair-col">
+          <div style="font-family:'Syne Mono',monospace;font-size:10px;color:var(--har);letter-spacing:.1em;margin-bottom:4px;">HARAMI</div>
+          <svg width="120" height="220" viewBox="0 0 120 220">
+            <!-- candle 1: big bear -->
+            <line x1="35" y1="18" x2="35" y2="30" stroke="var(--bear)" stroke-width="2" opacity="0">
+              <animate attributeName="opacity" from="0" to="1" dur=".3s" begin=".2s" fill="freeze"/>
+            </line>
+            <rect x="18" y="30" width="34" height="130" rx="2"
+              fill="rgba(255,61,90,.2)" stroke="var(--bear)" stroke-width="2.5" opacity="0">
+              <animate attributeName="opacity" from="0" to="1" dur=".5s" begin=".3s" fill="freeze"/>
+            </rect>
+            <line x1="35" y1="160" x2="35" y2="172" stroke="var(--bear)" stroke-width="2"/>
+            <text x="35" y="10" text-anchor="middle" fill="var(--bear)" font-family="Syne Mono,monospace" font-size="8" opacity="0">
+              CANDLE 1
+              <animate attributeName="opacity" from="0" to="1" dur=".3s" begin=".7s" fill="freeze"/>
+            </text>
+
+            <!-- candle 2: small bull inside -->
+            <line x1="85" y1="74" x2="85" y2="82" stroke="var(--bull)" stroke-width="2"/>
+            <rect x="70" y="82" width="30" height="50" rx="2"
+              fill="rgba(0,217,126,.22)" stroke="var(--bull)" stroke-width="2" opacity="0">
+              <animate attributeName="opacity" from="0" to="1" dur=".5s" begin="1s" fill="freeze"/>
+            </rect>
+            <line x1="85" y1="132" x2="85" y2="140" stroke="var(--bull)" stroke-width="2"/>
+            <text x="85" y="10" text-anchor="middle" fill="var(--bull)" font-family="Syne Mono,monospace" font-size="8" opacity="0">
+              CANDLE 2
+              <animate attributeName="opacity" from="0" to="1" dur=".3s" begin="1.3s" fill="freeze"/>
+            </text>
+
+            <!-- bracket showing contained -->
+            <rect x="64" y="26" width="42" height="150" rx="2"
+              fill="none" stroke="var(--har)" stroke-width="1" stroke-dasharray="4,3" opacity="0">
+              <animate attributeName="opacity" from="0" to="0.6" dur=".4s" begin="1.5s" fill="freeze"/>
+            </rect>
+            <text x="85" y="192" text-anchor="middle" fill="var(--har)" font-family="Syne Mono,monospace" font-size="8" opacity="0">
+              C2 INSIDE C1
+              <animate attributeName="opacity" from="0" to="1" dur=".3s" begin="1.7s" fill="freeze"/>
+            </text>
+          </svg>
+          <div class="pair-label" style="color:var(--har)">2nd CANDLE SMALLER</div>
+        </div>
+
+      </div>
+
+      <div class="size-box">
+        <div class="cl" style="color:var(--eng);margin-bottom:4px;">THE FUNDAMENTAL DIFFERENCE</div>
+        <div class="ct"><span style="color:var(--eng);font-weight:700;">Engulfing</span> — the second candle is <strong>larger</strong> than the first and completely swallows it. The new force dominates so decisively it overrides the entire previous session. &nbsp;|&nbsp; <span style="color:var(--har);font-weight:700;">Harami</span> — the second candle is <strong>smaller</strong> than the first and sits entirely inside it. The dominant force is losing energy, momentum is slowing.</div>
+      </div>
+
+      <div class="sigs">
+        <div class="sig neu">◈ Both are 2-candle patterns</div>
+        <div class="sig neu">◈ Both signal potential reversals</div>
+        <div class="sig neu">◈ Context (trend) determines direction</div>
+      </div>
+    </div>
+
+    <!-- SCENE 1: BULLISH ENGULFING -->
+    <div class="scene" id="sc1">
+      <div class="sc-title" style="color:var(--bull)">◆ 01 — Bullish Engulfing</div>
+
+      <div class="pair-wrap" style="align-items:flex-start;">
+
+        <div class="pair-col">
+          <svg width="160" height="260" viewBox="0 0 160 260" id="bulEngSvg">
+            <!-- Red candle 1 -->
+            <line x1="50" y1="30" x2="50" y2="44" stroke="var(--bear)" stroke-width="2.5" opacity="0">
+              <animate attributeName="opacity" from="0" to="1" dur=".3s" begin=".1s" fill="freeze"/>
+            </line>
+            <rect x="28" y="44" width="44" height="80" rx="2"
+              fill="rgba(255,61,90,.2)" stroke="var(--bear)" stroke-width="2.5" opacity="0">
+              <animate attributeName="opacity" from="0" to="1" dur=".5s" begin=".2s" fill="freeze"/>
+            </rect>
+            <line x1="50" y1="124" x2="50" y2="138" stroke="var(--bear)" stroke-width="2.5"/>
+            <text x="50" y="22" text-anchor="middle" fill="var(--bear)" font-family="Syne Mono,monospace" font-size="8.5" opacity="0">
+              DAY 1 — BEAR
+              <animate attributeName="opacity" from="0" to="1" dur=".3s" begin=".6s" fill="freeze"/>
+            </text>
+            <text x="50" y="155" text-anchor="middle" fill="var(--muted2)" font-family="Syne Mono,monospace" font-size="7.5" opacity="0">
+              DOWNTREND
+              <animate attributeName="opacity" from="0" to="1" dur=".3s" begin=".7s" fill="freeze"/>
+            </text>
+
+            <!-- Bull candle 2 — wider and taller, engulfs -->
+            <line x1="112" y1="18" x2="112" y2="30" stroke="var(--bull)" stroke-width="2.5"/>
+            <rect x="88" y="30" width="48" height="118" rx="2"
+              fill="rgba(0,217,126,.2)" stroke="var(--bull)" stroke-width="3" opacity="0">
+              <animate attributeName="opacity" from="0" to="1" dur=".7s" begin="1s" fill="freeze"/>
+            </rect>
+            <line x1="112" y1="148" x2="112" y2="162" stroke="var(--bull)" stroke-width="2.5"/>
+            <text x="112" y="10" text-anchor="middle" fill="var(--bull)" font-family="Syne Mono,monospace" font-size="8.5" opacity="0">
+              DAY 2 — BULL
+              <animate attributeName="opacity" from="0" to="1" dur=".3s" begin="1.6s" fill="freeze"/>
+            </text>
+            <text x="112" y="178" text-anchor="middle" fill="var(--bull)" font-family="Syne Mono,monospace" font-size="7.5" opacity="0">
+              ENGULFS DAY 1
+              <animate attributeName="opacity" from="0" to="1" dur=".3s" begin="1.8s" fill="freeze"/>
+            </text>
+
+            <!-- Open/Close labels -->
+            <text x="145" y="33" fill="var(--muted)" font-family="Syne Mono,monospace" font-size="7" opacity="0">
+              Open
+              <animate attributeName="opacity" from="0" to="1" dur=".3s" begin="2s" fill="freeze"/>
+            </text>
+            <text x="145" y="148" fill="var(--muted)" font-family="Syne Mono,monospace" font-size="7" opacity="0">
+              Close
+              <animate attributeName="opacity" from="0" to="1" dur=".3s" begin="2.1s" fill="freeze"/>
+            </text>
+          </svg>
+          <div class="pair-label" style="color:var(--bull)">BULLISH ENGULFING</div>
+        </div>
+
+        <div class="cards" style="max-width:400px;">
+          <div class="card">
+            <div class="cl" style="color:var(--bull)">WHERE IT APPEARS</div>
+            <div class="ct">At the <strong>bottom of a downtrend</strong>. Day 1 is a red bearish candle continuing the trend. Day 2 opens <strong>below</strong> Day 1's close and closes <strong>above</strong> Day 1's open — completely swallowing it.</div>
+          </div>
+          <div class="card">
+            <div class="cl" style="color:var(--bull)">WHAT IT MEANS</div>
+            <div class="ct">Buyers came in with such <strong>overwhelming force</strong> that they not only reversed the previous day's losses but wiped them out entirely and then some. The bears have been completely overpowered in a single session.</div>
+          </div>
+          <div class="card">
+            <div class="cl" style="color:var(--bull)">WHY IT'S POWERFUL</div>
+            <div class="ct">The engulfing candle is <strong>self-confirming</strong>. Unlike a doji or hammer that needs a follow-up candle, the engulfing's sheer size is already a statement. The bigger the engulfing body, the stronger the signal.</div>
+          </div>
+          <div class="card">
+            <div class="cl" style="color:var(--bull)">ENTRY & STOP</div>
+            <div class="ct">Enter on the <strong>next candle's open</strong> or wait for it to close green. Stop loss below the engulfing candle's low. For extra conviction wait for volume spike on Day 2.</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="sigs">
+        <div class="sig bull">✓ After Downtrend</div>
+        <div class="sig bull">✓ Day 2 Engulfs Day 1</div>
+        <div class="sig bull">✓ Strong Reversal Signal</div>
+        <div class="sig neu">◈ Bigger body = Stronger</div>
+      </div>
+    </div>
+
+    <!-- SCENE 2: BEARISH ENGULFING -->
+    <div class="scene" id="sc2">
+      <div class="sc-title" style="color:var(--bear)">◆ 02 — Bearish Engulfing</div>
+
+      <div class="pair-wrap" style="align-items:flex-start;">
+
+        <div class="pair-col">
+          <svg width="160" height="260" viewBox="0 0 160 260">
+            <!-- Green candle 1 -->
+            <line x1="50" y1="30" x2="50" y2="44" stroke="var(--bull)" stroke-width="2.5" opacity="0">
+              <animate attributeName="opacity" from="0" to="1" dur=".3s" begin=".1s" fill="freeze"/>
+            </line>
+            <rect x="28" y="44" width="44" height="80" rx="2"
+              fill="rgba(0,217,126,.2)" stroke="var(--bull)" stroke-width="2.5" opacity="0">
+              <animate attributeName="opacity" from="0" to="1" dur=".5s" begin=".2s" fill="freeze"/>
+            </rect>
+            <line x1="50" y1="124" x2="50" y2="138" stroke="var(--bull)" stroke-width="2.5"/>
+            <text x="50" y="22" text-anchor="middle" fill="var(--bull)" font-family="Syne Mono,monospace" font-size="8.5" opacity="0">
+              DAY 1 — BULL
+              <animate attributeName="opacity" from="0" to="1" dur=".3s" begin=".6s" fill="freeze"/>
+            </text>
+            <text x="50" y="155" text-anchor="middle" fill="var(--muted2)" font-family="Syne Mono,monospace" font-size="7.5" opacity="0">
+              UPTREND
+              <animate attributeName="opacity" from="0" to="1" dur=".3s" begin=".7s" fill="freeze"/>
+            </text>
+
+            <!-- Bear candle 2 — engulfs -->
+            <line x1="112" y1="18" x2="112" y2="30" stroke="var(--bear)" stroke-width="2.5"/>
+            <rect x="88" y="30" width="48" height="118" rx="2"
+              fill="rgba(255,61,90,.2)" stroke="var(--bear)" stroke-width="3" opacity="0">
+              <animate attributeName="opacity" from="0" to="1" dur=".7s" begin="1s" fill="freeze"/>
+            </rect>
+            <line x1="112" y1="148" x2="112" y2="162" stroke="var(--bear)" stroke-width="2.5"/>
+            <text x="112" y="10" text-anchor="middle" fill="var(--bear)" font-family="Syne Mono,monospace" font-size="8.5" opacity="0">
+              DAY 2 — BEAR
+              <animate attributeName="opacity" from="0" to="1" dur=".3s" begin="1.6s" fill="freeze"/>
+            </text>
+            <text x="112" y="178" text-anchor="middle" fill="var(--bear)" font-family="Syne Mono,monospace" font-size="7.5" opacity="0">
+              ENGULFS DAY 1
+              <animate attributeName="opacity" from="0" to="1" dur=".3s" begin="1.8s" fill="freeze"/>
+            </text>
+          </svg>
+          <div class="pair-label" style="color:var(--bear)">BEARISH ENGULFING</div>
+        </div>
+
+        <div class="cards" style="max-width:400px;">
+          <div class="card">
+            <div class="cl" style="color:var(--bear)">WHERE IT APPEARS</div>
+            <div class="ct">At the <strong>top of an uptrend</strong>. Day 1 is a green bullish candle continuing the trend. Day 2 opens <strong>above</strong> Day 1's close and closes <strong>below</strong> Day 1's open — swallowing it completely.</div>
+          </div>
+          <div class="card">
+            <div class="cl" style="color:var(--bear)">WHAT IT MEANS</div>
+            <div class="ct">Sellers arrived with such <strong>overwhelming force</strong> that they reversed every gain of the previous day and went further. Bulls were completely dominated. The uptrend's momentum has been brutally broken in one session.</div>
+          </div>
+          <div class="card">
+            <div class="cl" style="color:var(--bear)">RELIABILITY</div>
+            <div class="ct">One of the <strong>most reliable reversal signals</strong> in candlestick analysis — especially when it appears at known resistance levels, after extended uptrends, or accompanied by high volume on Day 2.</div>
+          </div>
+          <div class="card">
+            <div class="cl" style="color:var(--bear)">ENTRY & STOP</div>
+            <div class="ct">If short selling: enter on the <strong>next candle's open</strong>. Stop above the engulfing candle's high. If holding longs: the bearish engulfing is a signal to <strong>exit or at minimum tighten stops</strong>.</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="sigs">
+        <div class="sig bear">✗ After Uptrend</div>
+        <div class="sig bear">✗ Day 2 Engulfs Day 1</div>
+        <div class="sig bear">✗ Strong Reversal Signal</div>
+        <div class="sig neu">◈ High volume confirms</div>
+      </div>
+    </div>
+
+    <!-- SCENE 3: ENGULFING CHARTS -->
+    <div class="scene" id="sc3">
+      <div class="sc-title" style="color:var(--eng)">◆ 03 — Engulfing in the Wild</div>
+
+      <div style="display:flex;gap:28px;flex-wrap:wrap;justify-content:center;width:100%;">
+
+        <!-- Bullish chart -->
+        <div style="display:flex;flex-direction:column;gap:6px;flex:1;min-width:280px;max-width:340px;">
+          <div class="chart-label">DOWNTREND → BULLISH ENGULFING → REVERSAL</div>
+          <div class="chart-outer">
+            <div class="candles-row" id="bullEngChart"></div>
+            <div style="display:flex;justify-content:space-between;margin-top:6px;">
+              <div style="font-family:'Syne Mono',monospace;font-size:8px;color:var(--muted)">DAY 1</div>
+              <div style="font-family:'Syne Mono',monospace;font-size:8px;color:var(--bull)">ENGULF</div>
+              <div style="font-family:'Syne Mono',monospace;font-size:8px;color:var(--muted)">DAY 9</div>
+            </div>
+          </div>
+          <div class="sig bull" style="align-self:center;font-size:10px;">✓ BULLISH ENGULFING</div>
+        </div>
+
+        <!-- Bearish chart -->
+        <div style="display:flex;flex-direction:column;gap:6px;flex:1;min-width:280px;max-width:340px;">
+          <div class="chart-label">UPTREND → BEARISH ENGULFING → REVERSAL</div>
+          <div class="chart-outer">
+            <div class="candles-row" id="bearEngChart"></div>
+            <div style="display:flex;justify-content:space-between;margin-top:6px;">
+              <div style="font-family:'Syne Mono',monospace;font-size:8px;color:var(--muted)">DAY 1</div>
+              <div style="font-family:'Syne Mono',monospace;font-size:8px;color:var(--bear)">ENGULF</div>
+              <div style="font-family:'Syne Mono',monospace;font-size:8px;color:var(--muted)">DAY 9</div>
+            </div>
+          </div>
+          <div class="sig bear" style="align-self:center;font-size:10px;">✗ BEARISH ENGULFING</div>
+        </div>
+      </div>
+
+      <div class="cards" style="max-width:700px;">
+        <div class="card">
+          <div class="cl" style="color:var(--eng)">THE ENGULF RULE</div>
+          <div class="ct">Day 2's body must <strong>completely contain</strong> Day 1's body — open-to-close. Wicks don't need to be engulfed, just the bodies. If Day 2's body doesn't fully contain Day 1's body, it's not a valid engulfing pattern.</div>
+        </div>
+        <div class="card">
+          <div class="cl" style="color:var(--eng)">SIZE MATTERS</div>
+          <div class="ct">A Day 2 body that is <strong>2x or 3x</strong> the size of Day 1 is a much more powerful signal than one that barely engulfs. The wider the gap in size, the more decisive the reversal of control between buyers and sellers.</div>
+        </div>
+        <div class="card">
+          <div class="cl" style="color:var(--eng)">VOLUME ADDS POWER</div>
+          <div class="ct">An engulfing candle on <strong>significantly higher volume</strong> than Day 1 confirms the new dominant force had real participation behind it — not just a thin market move that could easily reverse again.</div>
+        </div>
+        <div class="card">
+          <div class="cl" style="color:var(--eng)">WHERE IT'S STRONGEST</div>
+          <div class="ct">Engulfing patterns at <strong>key support or resistance levels</strong> after extended trends are the highest-conviction setups. An engulfing at a random midpoint of a range is far weaker than one at a major structural level.</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- SCENE 4: BULLISH HARAMI -->
+    <div class="scene" id="sc4">
+      <div class="sc-title" style="color:var(--bull)">◆ 04 — Bullish Harami</div>
+
+      <div class="pair-wrap" style="align-items:flex-start;">
+
+        <div class="pair-col">
+          <svg width="160" height="260" viewBox="0 0 160 260">
+            <!-- Big bear candle 1 -->
+            <line x1="50" y1="20" x2="50" y2="34" stroke="var(--bear)" stroke-width="2.5" opacity="0">
+              <animate attributeName="opacity" from="0" to="1" dur=".3s" begin=".1s" fill="freeze"/>
+            </line>
+            <rect x="24" y="34" width="52" height="140" rx="2"
+              fill="rgba(255,61,90,.2)" stroke="var(--bear)" stroke-width="2.5" opacity="0">
+              <animate attributeName="opacity" from="0" to="1" dur=".6s" begin=".2s" fill="freeze"/>
+            </rect>
+            <line x1="50" y1="174" x2="50" y2="188" stroke="var(--bear)" stroke-width="2.5"/>
+            <text x="50" y="12" text-anchor="middle" fill="var(--bear)" font-family="Syne Mono,monospace" font-size="8" opacity="0">
+              DAY 1 — BIG BEAR
+              <animate attributeName="opacity" from="0" to="1" dur=".3s" begin=".7s" fill="freeze"/>
+            </text>
+
+            <!-- Small bull candle 2 — inside -->
+            <line x1="110" y1="80" x2="110" y2="90" stroke="var(--bull)" stroke-width="2"/>
+            <rect x="88" y="90" width="44" height="60" rx="2"
+              fill="rgba(0,217,126,.25)" stroke="var(--bull)" stroke-width="2.5" opacity="0">
+              <animate attributeName="opacity" from="0" to="1" dur=".5s" begin="1s" fill="freeze"/>
+            </rect>
+            <line x1="110" y1="150" x2="110" y2="162" stroke="var(--bull)" stroke-width="2"/>
+            <text x="110" y="12" text-anchor="middle" fill="var(--bull)" font-family="Syne Mono,monospace" font-size="8" opacity="0">
+              DAY 2 — SMALL BULL
+              <animate attributeName="opacity" from="0" to="1" dur=".3s" begin="1.5s" fill="freeze"/>
+            </text>
+            <text x="110" y="180" text-anchor="middle" fill="var(--bull)" font-family="Syne Mono,monospace" font-size="7.5" opacity="0">
+              CONTAINED INSIDE
+              <animate attributeName="opacity" from="0" to="1" dur=".3s" begin="1.7s" fill="freeze"/>
+            </text>
+
+            <!-- containment bracket -->
+            <rect x="82" y="30" width="56" height="162" rx="2"
+              fill="none" stroke="var(--har)" stroke-width="1" stroke-dasharray="4,3" opacity="0">
+              <animate attributeName="opacity" from="0" to="0.5" dur=".4s" begin="1.8s" fill="freeze"/>
+            </rect>
+          </svg>
+          <div class="pair-label" style="color:var(--bull)">BULLISH HARAMI</div>
+        </div>
+
+        <div class="cards" style="max-width:400px;">
+          <div class="card">
+            <div class="cl" style="color:var(--har)">WHAT HARAMI MEANS</div>
+            <div class="ct">"Harami" means <strong>pregnant</strong> in Japanese. The large first candle is the mother, and the small second candle is the baby sitting entirely inside it. The second candle's body must fit completely within the first candle's body.</div>
+          </div>
+          <div class="card">
+            <div class="cl" style="color:var(--bull)">BULLISH HARAMI SIGNAL</div>
+            <div class="ct">After a downtrend: Day 1 is a large bearish candle. Day 2 is a small bullish candle entirely within Day 1's range. It signals that <strong>selling momentum is dying</strong> — bears couldn't push as hard as yesterday.</div>
+          </div>
+          <div class="card">
+            <div class="cl" style="color:var(--bull)">WHAT IT TELLS YOU</div>
+            <div class="ct">The market went from a <strong>wide range bearish day</strong> to a narrow indecisive bullish day. That contraction in range and shift in color tells you selling pressure is exhausting. A potential bottom is forming.</div>
+          </div>
+          <div class="card">
+            <div class="cl" style="color:var(--bull)">CONFIRMATION CRITICAL</div>
+            <div class="ct">The harami is a <strong>weaker signal than engulfing</strong> — it shows hesitation rather than decisive reversal. Always wait for the third candle to close green before considering an entry.</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="sigs">
+        <div class="sig bull">✓ After Downtrend</div>
+        <div class="sig war">◈ Momentum Slowing</div>
+        <div class="sig war">◈ Weaker Signal</div>
+        <div class="sig neu">◈ Wait for 3rd Candle</div>
+      </div>
+    </div>
+
+    <!-- SCENE 5: BEARISH HARAMI -->
+    <div class="scene" id="sc5">
+      <div class="sc-title" style="color:var(--bear)">◆ 05 — Bearish Harami</div>
+
+      <div class="pair-wrap" style="align-items:flex-start;">
+
+        <div class="pair-col">
+          <svg width="160" height="260" viewBox="0 0 160 260">
+            <!-- Big bull candle 1 -->
+            <line x1="50" y1="20" x2="50" y2="34" stroke="var(--bull)" stroke-width="2.5" opacity="0">
+              <animate attributeName="opacity" from="0" to="1" dur=".3s" begin=".1s" fill="freeze"/>
+            </line>
+            <rect x="24" y="34" width="52" height="140" rx="2"
+              fill="rgba(0,217,126,.2)" stroke="var(--bull)" stroke-width="2.5" opacity="0">
+              <animate attributeName="opacity" from="0" to="1" dur=".6s" begin=".2s" fill="freeze"/>
+            </rect>
+            <line x1="50" y1="174" x2="50" y2="188" stroke="var(--bull)" stroke-width="2.5"/>
+            <text x="50" y="12" text-anchor="middle" fill="var(--bull)" font-family="Syne Mono,monospace" font-size="8" opacity="0">
+              DAY 1 — BIG BULL
+              <animate attributeName="opacity" from="0" to="1" dur=".3s" begin=".7s" fill="freeze"/>
+            </text>
+
+            <!-- Small bear candle 2 — inside -->
+            <line x1="110" y1="80" x2="110" y2="90" stroke="var(--bear)" stroke-width="2"/>
+            <rect x="88" y="90" width="44" height="60" rx="2"
+              fill="rgba(255,61,90,.22)" stroke="var(--bear)" stroke-width="2.5" opacity="0">
+              <animate attributeName="opacity" from="0" to="1" dur=".5s" begin="1s" fill="freeze"/>
+            </rect>
+            <line x1="110" y1="150" x2="110" y2="162" stroke="var(--bear)" stroke-width="2"/>
+            <text x="110" y="12" text-anchor="middle" fill="var(--bear)" font-family="Syne Mono,monospace" font-size="8" opacity="0">
+              DAY 2 — SMALL BEAR
+              <animate attributeName="opacity" from="0" to="1" dur=".3s" begin="1.5s" fill="freeze"/>
+            </text>
+            <text x="110" y="180" text-anchor="middle" fill="var(--bear)" font-family="Syne Mono,monospace" font-size="7.5" opacity="0">
+              CONTAINED INSIDE
+              <animate attributeName="opacity" from="0" to="1" dur=".3s" begin="1.7s" fill="freeze"/>
+            </text>
+
+            <rect x="82" y="30" width="56" height="162" rx="2"
+              fill="none" stroke="var(--har)" stroke-width="1" stroke-dasharray="4,3" opacity="0">
+              <animate attributeName="opacity" from="0" to="0.5" dur=".4s" begin="1.8s" fill="freeze"/>
+            </rect>
+          </svg>
+          <div class="pair-label" style="color:var(--bear)">BEARISH HARAMI</div>
+        </div>
+
+        <div class="cards" style="max-width:400px;">
+          <div class="card">
+            <div class="cl" style="color:var(--bear)">WHERE IT APPEARS</div>
+            <div class="ct">At the <strong>top of an uptrend</strong>. Day 1 is a large bullish candle continuing the rally. Day 2 is a small bearish candle that opens and closes entirely within Day 1's range. Buying power is contracting rapidly.</div>
+          </div>
+          <div class="card">
+            <div class="cl" style="color:var(--bear)">WHAT IT TELLS YOU</div>
+            <div class="ct">After a day of big bullish conviction, the next day couldn't make any meaningful progress in either direction. That <strong>contraction is a warning</strong> — the bulls who drove price up are running out of buyers to pass the position to.</div>
+          </div>
+          <div class="card">
+            <div class="cl" style="color:var(--bear)">HOW TO USE IT</div>
+            <div class="ct">Don't short on the harami alone. Use it as a signal to <strong>tighten stops on long positions</strong> or prepare for a potential reversal. The third candle closing red is what confirms the bearish harami signal.</div>
+          </div>
+          <div class="card">
+            <div class="cl" style="color:var(--bear)">HARAMI CROSS</div>
+            <div class="ct">When Day 2 is a <strong>doji instead of a small candle</strong>, it becomes a Harami Cross — an even stronger signal because the complete indecision of a doji inside the mother candle shows the trend has completely frozen.</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="sigs">
+        <div class="sig bear">✗ After Uptrend</div>
+        <div class="sig war">◈ Momentum Slowing</div>
+        <div class="sig war">◈ Weaker Signal</div>
+        <div class="sig neu">◈ Harami Cross = Stronger</div>
+      </div>
+    </div>
+
+    <!-- SCENE 6: SIDE BY SIDE COMPARE -->
+    <div class="scene" id="sc6">
+      <div class="sc-title" style="color:#6366f1">◆ 06 — Full Comparison</div>
+
+      <table class="ctable">
+        <tr>
+          <th>FEATURE</th>
+          <th style="color:var(--eng)">ENGULFING</th>
+          <th style="color:var(--har)">HARAMI</th>
+        </tr>
+        <tr>
+          <td><strong>Candle 2 size</strong></td>
+          <td style="color:var(--bull)">Larger than Candle 1</td>
+          <td style="color:var(--bear)">Smaller than Candle 1</td>
+        </tr>
+        <tr>
+          <td><strong>Relationship</strong></td>
+          <td>C2 swallows C1</td>
+          <td>C2 sits inside C1</td>
+        </tr>
+        <tr>
+          <td><strong>Signal strength</strong></td>
+          <td style="color:var(--bull)">Strong — self-confirming</td>
+          <td style="color:var(--har)">Moderate — needs 3rd candle</td>
+        </tr>
+        <tr>
+          <td><strong>What it shows</strong></td>
+          <td>Decisive reversal of control</td>
+          <td>Momentum slowing, indecision</td>
+        </tr>
+        <tr>
+          <td><strong>Bullish version</strong></td>
+          <td>After downtrend, big green engulfs red</td>
+          <td>After downtrend, small green inside big red</td>
+        </tr>
+        <tr>
+          <td><strong>Bearish version</strong></td>
+          <td>After uptrend, big red engulfs green</td>
+          <td>After uptrend, small red inside big green</td>
+        </tr>
+        <tr>
+          <td><strong>Confirmation needed</strong></td>
+          <td>Optional (pattern is strong alone)</td>
+          <td>Always — 3rd candle required</td>
+        </tr>
+        <tr>
+          <td><strong>Volume ideal</strong></td>
+          <td>C2 volume &gt; C1 volume</td>
+          <td>C2 volume &lt; C1 (contraction)</td>
+        </tr>
+        <tr>
+          <td><strong>Variant</strong></td>
+          <td>Outside Day (same concept)</td>
+          <td>Harami Cross (C2 is doji)</td>
+        </tr>
+      </table>
+
+      <div class="size-box" style="border-left-color:#6366f1;">
+        <div class="cl" style="color:#6366f1;margin-bottom:6px;">THE MEMORY TRICK</div>
+        <div class="ct"><span style="color:var(--eng);font-weight:700;">Engulfing</span> = the new candle is the <strong>aggressor</strong>. It shows up and dominates. Decisive, powerful, loud. &nbsp;|&nbsp; <span style="color:var(--har);font-weight:700;">Harami</span> = the new candle is the <strong>hesitator</strong>. It shows up small and uncertain, hiding inside yesterday's range. It whispers that the trend is losing conviction rather than shouting that it has reversed. Engulfing is a statement. Harami is a question mark.</div>
+      </div>
+    </div>
+
+    <!-- SCENE 7: MISTAKES -->
+    <div class="scene" id="sc7">
+      <div class="sc-title" style="color:#6366f1">◆ 07 — Mistakes & Rules</div>
+
+      <div class="cards" style="max-width:740px;">
+        <div class="card">
+          <div class="cl" style="color:#6366f1">MISTAKE 1 — WRONG TREND</div>
+          <div class="ct">A bullish engulfing in an <strong>uptrend is not a reversal signal</strong> — it's a continuation candle. A bearish harami in a downtrend is just more indecision in the same direction. The trend context is non-negotiable for both patterns.</div>
+        </div>
+        <div class="card">
+          <div class="cl" style="color:#6366f1">MISTAKE 2 — PARTIAL ENGULF</div>
+          <div class="ct">Day 2 must <strong>fully contain Day 1's body</strong> for a valid engulfing. If Day 2's close is only slightly above Day 1's open, it's a weak signal. A true engulfing has meaningful separation — not a barely-made-it overlap.</div>
+        </div>
+        <div class="card">
+          <div class="cl" style="color:#6366f1">MISTAKE 3 — HARAMI WITHOUT CONFIRM</div>
+          <div class="ct">Trading a harami without the third candle is like <strong>acting on a question mark</strong>. The harami says "something might be changing." The confirming candle says "yes it is." Never enter on the harami alone.</div>
+        </div>
+        <div class="card">
+          <div class="cl" style="color:#6366f1">MISTAKE 4 — IGNORING TREND LENGTH</div>
+          <div class="ct">Both patterns are more powerful after <strong>longer, more established trends</strong>. An engulfing after 2 days of movement is far weaker than one after 10 days of strong directional movement. The longer the trend, the more significant the reversal signal.</div>
+        </div>
+        <div class="card">
+          <div class="cl" style="color:#6366f1">MISTAKE 5 — NO KEY LEVEL</div>
+          <div class="ct">Both patterns at <strong>known support or resistance levels</strong> are dramatically more reliable. An engulfing at a major support zone is high conviction. The same pattern in random open space is much weaker.</div>
+        </div>
+        <div class="card">
+          <div class="cl" style="color:#6366f1">THE GOLDEN RULE</div>
+          <div class="ct">Use these patterns as <strong>alerts, not orders</strong>. They increase the probability of a reversal — they don't guarantee it. Always combine with trend structure, key levels, and volume before sizing into a position.</div>
+        </div>
+      </div>
+    </div>
+
+  </div><!-- /stage -->
+
+  <div class="explainer" id="expl"></div>
+
+  <div class="nav-row">
+    <button class="nbtn" id="prevBtn" onclick="navigate(-1)" disabled>← PREV</button>
+    <div class="nav-ind" id="ind">1 / 8</div>
+    <button class="nbtn pe" id="nextBtn" onclick="navigate(1)">NEXT →</button>
+  </div>
+
+</div>
+
+<script>
+// Starfield
+const cv=document.getElementById('bg'),cx=cv.getContext('2d');
+cv.width=window.innerWidth; cv.height=window.innerHeight;
+const ss=Array.from({length:100},()=>({x:Math.random()*cv.width,y:Math.random()*cv.height,r:Math.random()*1.1,o:Math.random()*.4+.06}));
+(function tick(){
+  cx.clearRect(0,0,cv.width,cv.height);
+  ss.forEach(s=>{
+    cx.beginPath(); cx.arc(s.x,s.y,s.r,0,Math.PI*2);
+    cx.fillStyle=`rgba(160,210,245,${s.o})`; cx.fill();
+    s.o+=(Math.random()-.5)*.012;
+    s.o=Math.max(.04,Math.min(.45,s.o));
+  });
+  requestAnimationFrame(tick);
+})();
+
+const scenes=[
+  {label:'00 CONCEPT', col:'e', expl:`<span class="he">Engulfing</span> and <span class="hh">Harami</span> are both <strong>two-candle reversal patterns</strong> but they work with opposite logic. In an engulfing, the second candle is larger — it swallows the first completely, signalling that the new side took decisive control. In a harami, the second candle is smaller — it sits entirely inside the first, signalling that the dominant side is losing momentum. Same idea of reversal, completely different expressions of it.`},
+  {label:'01 BULL ENG', col:'e', expl:`The <span class="hb">bullish engulfing</span> appears at the bottom of a downtrend. Day 1 is a bearish candle. Day 2 opens <strong>below Day 1's close</strong> and closes <strong>above Day 1's open</strong> — the green body completely swallows the red body. This tells you buyers came in with overwhelming, decisive force and reversed an entire day of selling in a single session. One of the most reliable reversal signals in technical analysis.`},
+  {label:'02 BEAR ENG', col:'e', expl:`The <span class="hr">bearish engulfing</span> is the mirror at the top of an uptrend. Day 1 is a bullish candle. Day 2 opens above Day 1's close and closes below Day 1's open — sellers completely dominated the session and wiped out the entire previous day's gains. The bigger the red body relative to the green body, <strong>the more decisive the seller dominance</strong>. Especially powerful at known resistance levels.`},
+  {label:'03 ENG CHARTS', col:'e', expl:`In real charts you'll see the engulfing candle stands out visually — it's noticeably <strong>larger and bolder</strong> than its surroundings. That visual dominance is the point. The market is sending a clear message: the side that was winning just got completely overwhelmed. The key validation is body containment — Day 2's open-to-close range must fully contain Day 1's open-to-close range. Wicks don't need to be engulfed, just the bodies.`},
+  {label:'04 BULL HAR', col:'h', expl:`The <span class="hb">bullish harami</span> appears at the bottom of a downtrend. Day 1 is a large bearish candle. Day 2 is a small bullish candle that <strong>fits entirely within Day 1's range</strong>. The market went from a wide confident bearish day to a narrow uncertain bullish day. That shift tells you selling pressure is exhausting — bears can no longer drive price with the same conviction. The word harami means pregnant in Japanese — the mother candle contains the baby.`},
+  {label:'05 BEAR HAR', col:'h', expl:`The <span class="hr">bearish harami</span> appears at the top of an uptrend. Day 1 is a large bullish candle. Day 2 is a small bearish candle entirely within Day 1's range. Buyers who drove price up hard yesterday could barely move it today. That contraction in range signals the <strong>bulls are running out of steam</strong> — there aren't enough new buyers coming in to continue the trend. A Harami Cross (Day 2 is a doji) is an even stronger version of this warning.`},
+  {label:'06 COMPARE', col:'c', expl:`The memory trick: <span class="he">Engulfing</span> is the <strong>aggressor</strong> — the new candle shows up large and dominant, decisively overrunning the previous session. <span class="hh">Harami</span> is the <strong>hesitator</strong> — the new candle shows up small and uncertain, hiding inside the previous session's range. Engulfing is a statement that the reversal has already happened. Harami is a question mark suggesting it might be about to happen. Engulfing needs no confirmation. Harami always does.`},
+  {label:'07 MISTAKES', col:'c', expl:`Two mistakes kill most traders using these patterns. First: <strong>ignoring the trend context</strong> — both patterns only work as reversal signals at trend extremes. In sideways markets or the wrong trend direction, they're meaningless. Second: <strong>trading the harami without confirmation</strong> — the harami is a warning, not a signal. It needs a third candle to close in the reversal direction before you act. Treat the harami as raising your alert level, and the confirming candle as the actual entry trigger.`}
+];
+
+let cur=0;
+const N=scenes.length;
+const tabsEl=document.getElementById('tabs');
+const progEl=document.getElementById('prog');
+
+scenes.forEach((s,i)=>{
+  const t=document.createElement('button');
+  const ac=i===0?(s.col==='e'?'ae':s.col==='h'?'ah':'ac'):'';
+  t.className=`tab ${ac}`;
+  t.id='tab'+i;
+  t.innerHTML=`<span class="dot"></span>${s.label}`;
+  t.onclick=()=>goTo(i);
+  tabsEl.appendChild(t);
+
+  const p=document.createElement('div');
+  p.className='prog-s'+(i===0?' ne':'');
+  p.id='pg'+i;
+  progEl.appendChild(p);
+});
+
+document.getElementById('expl').innerHTML=scenes[0].expl;
+
+function getAC(col){ return col==='e'?'ae':col==='h'?'ah':'ac'; }
+function getNC(col){ return col==='e'?'ne':col==='h'?'nh':'nc'; }
+function getNB(col){ return col==='e'?'pe':col==='h'?'ph':'pc'; }
+
+function goTo(i){
+  document.getElementById('sc'+cur).classList.remove('active');
+  document.getElementById('tab'+cur).classList.remove('ae','ah','ac');
+  document.getElementById('pg'+cur).className='prog-s done';
+
+  cur=i;
+  const s=scenes[cur];
+  document.getElementById('sc'+cur).classList.add('active');
+  document.getElementById('tab'+cur).classList.add(getAC(s.col));
+
+  const expl=document.getElementById('expl');
+  expl.innerHTML=s.expl;
+  expl.className='explainer'+(s.col==='h'?' hborder':s.col==='c'?' cborder':'');
+
+  document.getElementById('ind').textContent=`${cur+1} / ${N}`;
+  document.getElementById('prevBtn').disabled=cur===0;
+
+  const nb=document.getElementById('nextBtn');
+  nb.className='nbtn '+getNB(s.col);
+  nb.textContent=cur===N-1?'DONE ✓':'NEXT →';
+  nb.disabled=false;
+
+  scenes.forEach((_,j)=>{
+    const pg=document.getElementById('pg'+j);
+    if(j<cur) pg.className='prog-s done';
+    else if(j===cur) pg.className='prog-s '+getNC(scenes[j].col);
+    else pg.className='prog-s';
+  });
+
+  if(cur===3){ buildBullEng(); buildBearEng(); }
+}
+
+function navigate(d){ if(cur+d>=0&&cur+d<N) goTo(cur+d); }
+
+// ---- CHART BUILDERS ----
+function mkCandle(type, body, uw, lw, delay){
+  const wrap=document.createElement('div');
+  wrap.style.cssText='display:flex;flex-direction:column;align-items:center;flex:1;min-width:10px;opacity:0;transition:opacity .35s;';
+  setTimeout(()=>{ wrap.style.opacity='1'; }, delay);
+
+  const isEng = type==='bull-eng'||type==='bear-eng';
+  let color, bg, bw;
+  if(type==='bull'||type==='bull-eng'){ color='#00d97e'; bg='rgba(0,217,126,.22)'; bw=isEng?3:1.5; }
+  else if(type==='bear'||type==='bear-eng'){ color='#ff3d5a'; bg='rgba(255,61,90,.2)'; bw=isEng?3:1.5; }
+  else { color='#00d97e'; bg='rgba(0,217,126,.22)'; bw=2; }
+
+  const upperWick=document.createElement('div');
+  upperWick.style.cssText=`width:2px;height:${uw}px;background:${color};`;
+  const bodyEl=document.createElement('div');
+  bodyEl.style.cssText=`width:100%;height:${body}px;background:${bg};border:${bw}px solid ${color};border-radius:1px;${isEng?'box-shadow:0 0 6px '+color+'44;':''}`;
+  const lowerWick=document.createElement('div');
+  lowerWick.style.cssText=`width:2px;height:${lw}px;background:${color};`;
+
+  wrap.appendChild(upperWick); wrap.appendChild(bodyEl); wrap.appendChild(lowerWick);
+  return wrap;
+}
+
+function buildBullEng(){
+  const el=document.getElementById('bullEngChart');
+  if(el.children.length>0) return;
+  const data=[
+    {type:'bear',body:38,uw:5,lw:12,delay:0},
+    {type:'bear',body:46,uw:4,lw:10,delay:70},
+    {type:'bear',body:52,uw:5,lw:8,delay:140},
+    {type:'bear',body:44,uw:4,lw:9,delay:210},
+    // bullish engulfing
+    {type:'bull-eng',body:100,uw:6,lw:8,delay:280},
+    // recovery
+    {type:'bull',body:50,uw:5,lw:6,delay:350},
+    {type:'bull',body:60,uw:4,lw:5,delay:420},
+    {type:'bull',body:55,uw:6,lw:4,delay:490},
+  ];
+  data.forEach(d=>{ el.appendChild(mkCandle(d.type,d.body,d.uw,d.lw,d.delay)); });
+}
+
+function buildBearEng(){
+  const el=document.getElementById('bearEngChart');
+  if(el.children.length>0) return;
+  const data=[
+    {type:'bull',body:38,uw:5,lw:10,delay:0},
+    {type:'bull',body:46,uw:4,lw:8,delay:70},
+    {type:'bull',body:52,uw:5,lw:6,delay:140},
+    {type:'bull',body:44,uw:4,lw:7,delay:210},
+    // bearish engulfing
+    {type:'bear-eng',body:100,uw:7,lw:6,delay:280},
+    // reversal
+    {type:'bear',body:50,uw:5,lw:8,delay:350},
+    {type:'bear',body:60,uw:4,lw:6,delay:420},
+    {type:'bear',body:55,uw:6,lw:5,delay:490},
+  ];
+  data.forEach(d=>{ el.appendChild(mkCandle(d.type,d.body,d.uw,d.lw,d.delay)); });
+}
+</script>
+</body>
+</html>
